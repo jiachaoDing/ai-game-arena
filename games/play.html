@@ -1,10 +1,19 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="scroll-smooth">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="AI Game Arena - 游戏演示">
-  <title>AI Game Arena - 游戏演示</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="AI Game Benchmark - Interactive gameplay demonstration of AI-generated code. Test and compare LLM coding capabilities.">
+  <meta name="keywords" content="AI game demo, LLM code test, interactive benchmark, AI programming">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="AI Game Benchmark - Game Demo">
+  <meta property="og:description" content="Interactive demonstration of AI-generated game code.">
+  <meta property="og:type" content="website">
+  
+  <title>AI Game Benchmark - Game Demo</title>
 
   <!-- Tailwind CSS v4.0 Output -->
   <link rel="stylesheet" href="../dist/output.css">
@@ -27,6 +36,12 @@
       gameId: '',
       modelId: '',
       loading: true,
+      darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches),
+
+      toggleTheme() {
+        this.darkMode = !this.darkMode;
+        localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+      },
 
       init() {
         // Get URL parameters
@@ -70,57 +85,96 @@
 
       getStatusBadgeClass(status) {
         const statusMap = {
-          'Godlike': 'badge-godlike',
-          'Redeemed': 'badge-redeemed',
+          'Pass': 'badge-pass',
+          'Fixed': 'badge-fixed',
           'Failed': 'badge-failed'
         };
-        return statusMap[status] || 'badge-redeemed';
+        return statusMap[status] || 'badge-fixed';
       },
 
       getStatusIcon(status) {
         const iconMap = {
-          'Godlike': '🏆',
-          'Redeemed': '✨',
-          'Failed': '🤡'
+          'Pass': '✅',
+          'Fixed': '⚠️',
+          'Failed': '❌'
         };
         return iconMap[status] || '📦';
       }
     }"
-    x-init="init()"
-    class="min-h-screen bg-slate-900 text-white"
+    x-init="
+      $watch('darkMode', val => val ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark')); 
+      darkMode ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
+      init()
+    "
+    class="min-h-screen bg-bg-main text-text-primary transition-colors duration-300"
   >
+    <!-- Theme Toggle -->
+    <button 
+      @click="toggleTheme()" 
+      class="fixed top-6 right-6 z-50 p-2 text-text-secondary hover:text-text-primary transition-colors duration-300 group"
+      aria-label="Toggle Theme"
+    >
+      <div class="relative w-6 h-6">
+        <div x-show="!darkMode" class="absolute inset-0">
+          <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </div>
+        <div x-show="darkMode" class="absolute inset-0">
+          <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+        </div>
+      </div>
+    </button>
     <!-- Loading State -->
     <div x-show="loading" class="min-h-screen flex items-center justify-center">
       <div class="text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent mb-4"></div>
-        <p class="text-text-secondary">加载游戏中...</p>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent mb-4" role="status" aria-label="Loading"></div>
+        <p class="text-text-secondary">Loading game...</p>
       </div>
     </div>
 
     <!-- Main Content -->
     <div x-show="!loading" class="min-h-screen">
       <!-- Header -->
-      <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
+      <header class="border-b border-border bg-bg-main/80 backdrop-blur-md sticky top-0 z-40 transition-colors duration-300" role="banner">
         <div class="container-custom py-4">
           <div class="flex items-center justify-between">
             <!-- Back Button -->
-            <a href="./" class="flex items-center gap-2 text-text-secondary hover:text-white transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a :href="'./' + gameId + '/'" class="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-all duration-300 font-medium" aria-label="Back to benchmark list">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
               </svg>
-              <span>返回列表</span>
+              <span>Back to List</span>
             </a>
 
             <!-- Title -->
-            <div class="text-center">
-              <h1 class="text-xl font-semibold" x-text="gameData?.title"></h1>
-              <div class="text-sm text-text-secondary" x-text="modelData?.name"></div>
+            <div class="text-center transition-all duration-300">
+              <h1 class="text-xl font-bold tracking-tight text-text-primary transition-colors duration-300" x-text="gameData?.title"></h1>
+              <div class="text-xs text-text-muted font-medium uppercase tracking-widest mt-0.5 transition-colors duration-300" x-text="modelData?.name"></div>
             </div>
 
-            <!-- Status Badge -->
-            <div class="badge" :class="getStatusBadgeClass(modelData?.status)">
-              <span x-text="getStatusIcon(modelData?.status)"></span>
-              <span class="ml-1" x-text="modelData?.status"></span>
+            <div class="flex items-center gap-4">
+              <!-- Prompt Link -->
+              <a 
+                :href="gameData?.prompt_file" 
+                target="_blank"
+                rel="noopener noreferrer"
+                class="hidden md:flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover transition-colors duration-300"
+                aria-label="View prompt"
+              >
+                <span>View Prompt</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+              </a>
+
+              <!-- Status Badge -->
+              <div class="badge" :class="getStatusBadgeClass(modelData?.status)">
+                <span x-text="getStatusIcon(modelData?.status)"></span>
+                <span class="ml-1" x-text="modelData?.status"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -130,83 +184,91 @@
       <div class="container-custom py-8">
         <div class="max-w-4xl mx-auto">
           <!-- Version Toggle (only show if Round 2 exists) -->
-          <div x-show="modelData?.r2_file" class="flex justify-center mb-6">
-            <div class="bg-slate-800 rounded-lg p-1 flex">
+          <div x-show="modelData?.r2_file" class="flex justify-center mb-8" role="group" aria-label="Version selector">
+            <div class="bg-bg-card border border-border rounded-full p-1 flex shadow-sm transition-all duration-300">
               <button
                 @click="currentVersion = 'r1'"
-                :class="currentVersion === 'r1' ? 'bg-accent text-white' : 'text-text-secondary hover:text-white'"
-                class="px-4 py-2 rounded-md transition-colors"
+                :class="currentVersion === 'r1' ? 'bg-accent text-white shadow-md' : 'text-text-secondary hover:text-text-primary'"
+                class="px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300"
+                :aria-pressed="currentVersion === 'r1'"
               >
-                Round 1 (初生成)
+                Round 1 (Initial)
               </button>
               <button
                 @click="currentVersion = 'r2'"
-                :class="currentVersion === 'r2' ? 'bg-accent text-white' : 'text-text-secondary hover:text-white'"
-                class="px-4 py-2 rounded-md transition-colors"
+                :class="currentVersion === 'r2' ? 'bg-accent text-white shadow-md' : 'text-text-secondary hover:text-text-primary'"
+                class="px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300"
+                :aria-pressed="currentVersion === 'r2'"
               >
-                Round 2 (修复版)
+                Round 2 (Fixed)
               </button>
             </div>
           </div>
 
           <!-- Game Iframe -->
-          <div class="bg-slate-800 rounded-xl overflow-hidden shadow-2xl">
+          <div class="bg-bg-card rounded-2xl overflow-hidden border border-border dark:shadow-2xl dark:shadow-black/50 transition-all duration-300" role="main">
             <iframe
               :src="currentIframeSrc"
-              class="w-full h-[600px] border-0"
-              title="AI Generated Game"
+              class="w-full h-[600px] border-0 overflow-hidden"
+              scrolling="no"
+              title="AI Generated Game Demo"
+              :aria-label="`${modelData?.name} game implementation`"
             ></iframe>
           </div>
 
           <!-- Game Info -->
-          <div class="mt-6 grid md:grid-cols-2 gap-6">
+          <div class="mt-8 grid md:grid-cols-2 gap-8">
             <!-- Model Info -->
-            <div class="glass rounded-xl p-6">
-              <h3 class="text-lg font-semibold mb-4">模型信息</h3>
-              <div class="space-y-3">
-                <div class="flex justify-between">
-                  <span class="text-text-secondary">模型名称</span>
-                  <span x-text="modelData?.name"></span>
+            <article class="bg-bg-card border border-border rounded-2xl p-8 transition-all duration-300">
+              <h2 class="text-sm font-bold text-accent uppercase tracking-widest mb-6 transition-colors duration-300">Model Information</h2>
+              <div class="space-y-4">
+                <div class="flex justify-between items-center transition-all duration-300">
+                  <span class="text-text-muted transition-colors duration-300">Model Name</span>
+                  <span class="font-semibold transition-colors duration-300" x-text="modelData?.name"></span>
                 </div>
-                <div class="flex justify-between">
-                  <span class="text-text-secondary">尝试次数</span>
-                  <span x-text="modelData?.tries + ' 次'"></span>
+                <div class="flex justify-between items-center transition-all duration-300">
+                  <span class="text-text-muted transition-colors duration-300">Attempts</span>
+                  <span class="font-semibold transition-colors duration-300" x-text="modelData?.tries"></span>
                 </div>
-                <div class="flex justify-between">
-                  <span class="text-text-secondary">最终状态</span>
+                <div class="flex justify-between items-center transition-all duration-300">
+                  <span class="text-text-muted transition-colors duration-300">Final Status</span>
                   <div class="badge" :class="getStatusBadgeClass(modelData?.status)" x-text="modelData?.status"></div>
                 </div>
               </div>
-            </div>
+            </article>
 
             <!-- Notes -->
-            <div class="glass rounded-xl p-6">
-              <h3 class="text-lg font-semibold mb-4">评测笔记</h3>
-              <p class="text-text-secondary" x-text="modelData?.notes"></p>
-            </div>
+            <article class="bg-bg-card border border-border rounded-2xl p-8 transition-all duration-300">
+              <h2 class="text-sm font-bold text-accent uppercase tracking-widest mb-6 transition-colors duration-300">Evaluation Notes</h2>
+              <p class="text-text-secondary leading-relaxed transition-colors duration-300" x-text="modelData?.notes"></p>
+            </article>
           </div>
 
           <!-- Action Buttons -->
-          <div class="mt-8 flex flex-wrap gap-4 justify-center">
+          <nav class="mt-8 flex flex-wrap gap-4 justify-center" role="navigation" aria-label="Source code and navigation">
             <a
               :href="modelData?.r1_file"
               target="_blank"
+              rel="noopener noreferrer"
               class="btn-secondary"
+              aria-label="View Round 1 source code"
             >
-              查看 Round 1 源码
+              View Round 1 Code
             </a>
             <a
               x-show="modelData?.r2_file"
               :href="modelData?.r2_file"
               target="_blank"
+              rel="noopener noreferrer"
               class="btn-secondary"
+              aria-label="View Round 2 source code"
             >
-              查看 Round 2 源码
+              View Round 2 Code
             </a>
-            <a href="./" class="btn-primary">
-              返回游戏列表
+            <a :href="'./' + gameId + '/'" class="btn-primary" aria-label="Back to benchmark list">
+              Back to List
             </a>
-          </div>
+          </nav>
         </div>
       </div>
     </div>

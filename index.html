@@ -1,10 +1,26 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="scroll-smooth">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="AI Game Arena - 通过游戏可视化展示 AI 编程能力">
-  <title>AI Game Arena - Visualizing LLM Coding Capabilities</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="AI Game Benchmark - Compare LLM coding capabilities through interactive game implementations. Evaluate one-shot code generation and self-correction abilities of leading AI models.">
+  <meta name="keywords" content="AI coding, LLM benchmark, code generation, AI comparison, GPT-4, Claude, DeepSeek, game programming">
+  <meta name="author" content="AI Game Benchmark">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="AI Game Benchmark - Visualizing LLM Coding Capabilities">
+  <meta property="og:description" content="Compare AI models through interactive game implementations. Test one-shot generation and self-correction abilities.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yourdomain.com/">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Game Benchmark - Visualizing LLM Coding Capabilities">
+  <meta name="twitter:description" content="Compare AI models through interactive game implementations.">
+  
+  <title>AI Game Benchmark - Visualizing LLM Coding Capabilities</title>
   
   <!-- Tailwind CSS v4.0 Output -->
   <link rel="stylesheet" href="./dist/output.css">
@@ -16,72 +32,96 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Structured Data for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "AI Game Benchmark",
+    "description": "Compare LLM coding capabilities through interactive game implementations",
+    "url": "https://yourdomain.com/"
+  }
+  </script>
 </head>
 
-<body>
+<body 
+  x-data="{ 
+    darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches),
+    toggleTheme() {
+      this.darkMode = !this.darkMode;
+      localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+    }
+  }" 
+  x-init="$watch('darkMode', val => val ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark')); darkMode ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark')"
+>
+  <!-- Theme Toggle -->
+  <button 
+    @click="toggleTheme()" 
+    class="fixed top-6 right-6 z-50 p-2 text-text-secondary hover:text-text-primary transition-colors duration-300 group"
+    aria-label="Toggle Theme"
+  >
+    <div class="relative w-6 h-6">
+      <div x-show="!darkMode" class="absolute inset-0">
+        <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+      </div>
+      <div x-show="darkMode" class="absolute inset-0">
+        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+      </div>
+    </div>
+  </button>
+
   <!-- Hero Section -->
-  <section class="min-h-screen flex items-center justify-center relative overflow-hidden">
-    <div class="container-custom text-center my-20">
+  <section class="min-h-screen flex items-center justify-center relative overflow-hidden" role="banner">
+    <div class="container-custom text-center py-20">
       <!-- Main Heading -->
-      <div class="space-y-6 mb-12">
-        <h1 class="text-gradient animate-fade-in">
-          AI Game Arena
+      <div class="flex flex-col items-center space-y-8 mb-12 w-full">
+        <h1 class="text-gradient animate-fade-in block w-full">
+          AI Game Benchmark
         </h1>
-        <p class="text-2xl md:text-3xl text-text-secondary max-w-3xl mx-auto text-balance">
-          Visualizing AI Code Through Games
-        </p>
-        <p class="text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
-          拒绝枯燥跑分，用游戏直观展示 AI 编程能力。<br>
-          无人工干预，展示最真实的代码现场。
-        </p>
+        <div class="max-w-3xl w-full">
+          <p class="text-2xl md:text-4xl text-text-secondary font-semibold tracking-tight">
+            Evaluating LLM Coding Through Interactive Games
+          </p>
+        </div>
+        <div class="max-w-2xl w-full">
+          <p class="text-lg md:text-xl text-text-muted leading-relaxed">
+            Moving beyond abstract benchmarks, we visualize real AI coding capabilities through game implementations.<br class="hidden md:block">
+            Zero human intervention. Authentic code generation tested live.
+          </p>
+        </div>
       </div>
       
       <!-- CTA Buttons -->
-      <div class="flex flex-wrap gap-4 justify-center mb-20">
-        <a href="#games" class="btn-primary">
-          探索游戏竞技场 →
+      <div class="flex flex-wrap gap-6 justify-center mb-24">
+        <a href="#games" class="btn-primary" aria-label="View game benchmarks">
+          View Benchmarks →
         </a>
-        <a href="https://github.com/yourusername/ai-game-arena" target="_blank" class="btn-secondary">
-          GitHub 仓库
+        <a href="https://github.com/yourusername/ai-game-arena" target="_blank" rel="noopener noreferrer" class="btn-secondary" aria-label="Visit GitHub repository">
+          <span class="flex items-center gap-2">
+            GitHub Repository
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+            </svg>
+          </span>
         </a>
       </div>
-      
-      <!-- Stats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-        <div class="glass rounded-2xl p-6">
-          <div class="text-4xl font-bold text-accent mb-2">12+</div>
-          <div class="text-text-secondary">AI 模型测试</div>
-        </div>
-        <div class="glass rounded-2xl p-6">
-          <div class="text-4xl font-bold text-accent mb-2">5+</div>
-          <div class="text-text-secondary">经典游戏</div>
-        </div>
-        <div class="glass rounded-2xl p-6">
-          <div class="text-4xl font-bold text-accent mb-2">100%</div>
-          <div class="text-text-secondary">真实代码</div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Scroll Indicator -->
-    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-      <svg class="w-6 h-6 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-      </svg>
-    </div>
   </section>
 
   <!-- Games Grid Section -->
-  <section id="games" class="py-20">
+  <section id="games" class="py-20" role="main">
     <div class="container-custom">
       <!-- Section Header -->
       <div class="text-center mb-16">
-        <h2 class="mb-4">游戏竞技场</h2>
+        <h2 class="mb-4">Game Benchmarks</h2>
         <p class="text-xl text-text-secondary max-w-2xl mx-auto">
-          每个游戏都经历 Round 1 (初生成) 和 Round 2 (自修复) 两轮测试
+          Each test consists of two rounds: initial code generation and self-correction
         </p>
       </div>
-      
       <!-- Games Grid -->
       <div 
         x-data="{
@@ -101,18 +141,18 @@
           
           getStatusBadgeClass(status) {
             const statusMap = {
-              'Godlike': 'badge-godlike',
-              'Redeemed': 'badge-redeemed',
+              'Pass': 'badge-pass',
+              'Fixed': 'badge-fixed',
               'Failed': 'badge-failed'
             };
-            return statusMap[status] || 'badge-redeemed';
+            return statusMap[status] || 'badge-fixed';
           },
           
           getStatusIcon(status) {
             const iconMap = {
-              'Godlike': '🏆',
-              'Redeemed': '✨',
-              'Failed': '🤡'
+              'Pass': '✅',
+              'Fixed': '⚠️',
+              'Failed': '❌'
             };
             return iconMap[status] || '📦';
           }
@@ -123,8 +163,8 @@
         <!-- Loading State -->
         <template x-if="loading">
           <div class="col-span-full text-center py-20">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-            <p class="mt-4 text-text-secondary">加载游戏数据中...</p>
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent" role="status" aria-label="Loading"></div>
+            <p class="mt-4 text-text-secondary">Loading benchmark data...</p>
           </div>
         </template>
         
@@ -144,16 +184,18 @@
               <!-- Models Count -->
               <div class="flex items-center justify-between mb-4 text-sm">
                 <span class="text-text-muted">
-                  <span x-text="game.models.length"></span> 个模型参战
+                  <span x-text="game.models.length"></span> models tested
                 </span>
                 <a 
                   :href="game.prompt_file" 
                   target="_blank"
+                  rel="noopener noreferrer"
                   class="text-accent hover:text-accent-hover flex items-center gap-1"
                   @click.stop
+                  aria-label="View prompt"
                 >
-                  <span>查看 Prompt</span>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span>View Prompt</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                   </svg>
                 </a>
@@ -170,12 +212,13 @@
               </div>
               
               <!-- View Details Button -->
-              <div class="mt-6 pt-6 border-t border-slate-700/50">
+              <div class="mt-6 pt-6 border-t border-border">
                 <a 
                   :href="`./games/${gameId}/`" 
                   class="btn-secondary w-full text-center inline-block"
+                  :aria-label="`View ${game.title} benchmark results`"
                 >
-                  进入战场 →
+                  View Results →
                 </a>
               </div>
             </div>
@@ -185,46 +228,44 @@
     </div>
   </section>
 
-  <!-- Philosophy Section -->
-  <section class="py-20 bg-gradient-to-b from-transparent to-slate-900/50">
+  <!-- Methodology Section -->
+  <section class="py-24" role="complementary">
     <div class="container-custom">
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-center mb-12">评测原则</h2>
+        <h2 class="text-center mb-16 text-3xl font-bold tracking-tight">Testing Methodology</h2>
         
-        <div class="grid md:grid-cols-2 gap-8">
+        <div class="grid md:grid-cols-2 gap-12">
           <!-- Round 1 -->
-          <div class="card">
-            <div class="text-4xl mb-4">🎯</div>
-            <h3 class="text-xl mb-3">Round 1: One-Shot</h3>
-            <p class="text-text-secondary mb-4">
-              AI 收到统一标准 Prompt 后直接输出代码。无论成败，保留该版本作为"初始能力"证据。
+          <article class="space-y-4">
+            <div class="text-accent font-bold text-sm tracking-widest uppercase">Round 1</div>
+            <h3 class="text-2xl font-bold">Initial Generation</h3>
+            <p class="text-text-secondary text-lg leading-relaxed">
+              Each AI model receives an identical prompt and generates code in a single attempt. This output is preserved as-is, demonstrating the model's baseline coding ability without iteration.
             </p>
-            <div class="badge badge-godlike">一次通关</div>
-          </div>
+          </article>
           
           <!-- Round 2 -->
-          <div class="card">
-            <div class="text-4xl mb-4">🔧</div>
-            <h3 class="text-xl mb-3">Round 2: Debug</h3>
-            <p class="text-text-secondary mb-4">
-              允许 3 轮对话以内的调试。将错误信息反馈给 AI，观察其自我修复能力。
+          <article class="space-y-4">
+            <div class="text-accent font-bold text-sm tracking-widest uppercase">Round 2</div>
+            <h3 class="text-2xl font-bold">Self-Correction</h3>
+            <p class="text-text-secondary text-lg leading-relaxed">
+              Models receive error feedback and attempt fixes for up to 3 iterations. This phase evaluates debugging skills and the ability to iterate toward working code in real development scenarios.
             </p>
-            <div class="badge badge-redeemed">救赎成功</div>
-          </div>
+          </article>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="py-12 border-t border-slate-800">
+  <footer class="py-12 border-t border-border" role="contentinfo">
     <div class="container-custom text-center">
       <p class="text-text-muted mb-4">
-        AI Game Arena - 用游戏直观展示 AI 编程能力
+        AI Game Benchmark - Evaluating LLM coding capabilities through interactive implementations
       </p>
       <p class="text-sm text-text-muted">
         Built with Tailwind CSS v4.0 & Alpine.js • 
-        <a href="https://github.com/yourusername/ai-game-arena" class="hover:text-accent transition-colors">
+        <a href="https://github.com/yourusername/ai-game-arena" class="hover:text-accent transition-colors" rel="noopener noreferrer" target="_blank">
           Open Source on GitHub
         </a>
       </p>

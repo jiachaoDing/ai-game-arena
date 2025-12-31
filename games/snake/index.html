@@ -1,10 +1,19 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="scroll-smooth">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="AI Game Arena - Snake 游戏竞技场">
-  <title>🐍 Snake - AI Game Arena</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Snake Game Benchmark - Compare AI model implementations of the classic Snake game. Test LLM coding capabilities through interactive gameplay.">
+  <meta name="keywords" content="Snake game, AI coding, LLM benchmark, game implementation, code generation test">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Snake Benchmark - AI Game Benchmark">
+  <meta property="og:description" content="Compare AI model implementations of the classic Snake game.">
+  <meta property="og:type" content="website">
+  
+  <title>🐍 Snake Benchmark - AI Game Benchmark</title>
 
   <!-- Tailwind CSS v4.0 Output -->
   <link rel="stylesheet" href="../../dist/output.css">
@@ -18,61 +27,82 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 
-<body>
-  <!-- Hero Section -->
-  <section class="min-h-screen flex items-center justify-center relative overflow-hidden">
-    <div class="container-custom text-center my-20">
-      <!-- Game Icon & Title -->
-      <div class="space-y-6 mb-12">
-        <div class="text-8xl animate-bounce">🐍</div>
-        <h1 class="text-gradient animate-fade-in">
-          Snake 竞技场
-        </h1>
-        <p class="text-xl md:text-2xl text-text-secondary max-w-2xl mx-auto">
-          经典贪吃蛇游戏，考验 AI 的游戏逻辑实现能力
-        </p>
-        <p class="text-lg text-text-muted max-w-xl mx-auto leading-relaxed">
-          从键盘控制到碰撞检测，从分数系统到游戏循环，每个细节都体现 AI 的编程水平。
-        </p>
+<body 
+  x-data="{ 
+    darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches),
+    toggleTheme() {
+      this.darkMode = !this.darkMode;
+      localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+    }
+  }" 
+  x-init="$watch('darkMode', val => val ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark')); darkMode ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark')"
+>
+  <!-- Theme Toggle -->
+  <button 
+    @click="toggleTheme()" 
+    class="fixed top-6 right-6 z-50 p-2 text-text-secondary hover:text-text-primary transition-colors duration-300 group"
+    aria-label="Toggle Theme"
+  >
+    <div class="relative w-6 h-6">
+      <div x-show="!darkMode" class="absolute inset-0">
+        <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
       </div>
+      <div x-show="darkMode" class="absolute inset-0">
+        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+      </div>
+    </div>
+  </button>
 
-      <!-- Back to Home -->
-      <div class="mb-12">
-        <a href="../../" class="btn-secondary">
-          ← 返回主场
+  <!-- Navigation Header -->
+  <nav class="sticky top-0 z-40 bg-bg-main/80 backdrop-blur-md border-b border-border transition-colors duration-300" role="navigation">
+    <div class="container-custom py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="../../" class="p-2 hover:bg-bg-card rounded-full transition-all duration-300 text-text-secondary hover:text-text-primary" title="Back to home" aria-label="Back to home">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
         </a>
+        <div class="h-6 w-px bg-border transition-colors duration-300" aria-hidden="true"></div>
+        <div class="flex items-center gap-2 transition-all duration-300">
+          <span class="text-2xl" aria-hidden="true">🐍</span>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-text-primary transition-colors duration-300">Snake Benchmark</h1>
+        </div>
       </div>
-
-      <!-- Game Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-        <div class="glass rounded-2xl p-6">
-          <div class="text-3xl mb-2">🎯</div>
-          <div class="text-2xl font-bold text-accent mb-2" x-data="{ gameData: null }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => gameData = d.snake)" x-text="gameData?.models.length || '3'"></div>
-          <div class="text-text-secondary">AI 模型参战</div>
+      
+      <!-- Stats Summary (Desktop) -->
+      <div class="hidden md:flex items-center gap-8 text-sm transition-all duration-300">
+        <div class="flex flex-col items-end transition-all duration-300">
+          <span class="text-text-muted text-xs uppercase tracking-widest transition-colors duration-300">Models Tested</span>
+          <span class="font-bold text-accent transition-colors duration-300" x-data="{ count: '...' }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => count = d.snake.models.length)" x-text="count"></span>
         </div>
-        <div class="glass rounded-2xl p-6">
-          <div class="text-3xl mb-2">🏆</div>
-          <div class="text-2xl font-bold text-accent mb-2" x-data="{ gameData: null }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => gameData = d.snake)" x-text="gameData?.models.filter(m => m.status === 'Godlike').length || '2'"></div>
-          <div class="text-text-secondary">一次通关</div>
-        </div>
-        <div class="glass rounded-2xl p-6">
-          <div class="text-3xl mb-2">✨</div>
-          <div class="text-2xl font-bold text-accent mb-2" x-data="{ gameData: null }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => gameData = d.snake)" x-text="gameData?.models.filter(m => m.status === 'Redeemed').length || '1'"></div>
-          <div class="text-text-secondary">救赎成功</div>
+        <div class="flex flex-col items-end transition-all duration-300">
+          <span class="text-text-muted text-xs uppercase tracking-widest transition-colors duration-300">Passed</span>
+          <span class="font-bold text-text-primary transition-colors duration-300" x-data="{ count: '...' }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => count = d.snake.models.filter(m => m.status === 'Pass').length)" x-text="count"></span>
         </div>
       </div>
     </div>
-  </section>
+  </nav>
 
   <!-- Models Grid Section -->
-  <section class="py-20">
+  <section class="py-8 md:py-12" role="main">
     <div class="container-custom">
       <!-- Section Header -->
-      <div class="text-center mb-16">
-        <h2 class="mb-4">参战模型</h2>
-        <p class="text-xl text-text-secondary max-w-2xl mx-auto">
-          每个模型都经过 Round 1 (初生成) 和 Round 2 (自修复) 两轮测试
-        </p>
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
+        <!-- Mobile Stats -->
+        <div class="md:hidden flex gap-4 p-4 bg-bg-card rounded-2xl border border-border transition-all duration-300">
+          <div class="flex-1 text-center transition-all duration-300">
+            <div class="text-xs text-text-muted uppercase mb-1 transition-colors duration-300">Models Tested</div>
+            <div class="font-bold text-accent transition-colors duration-300" x-data="{ count: '...' }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => count = d.snake.models.length)" x-text="count"></div>
+          </div>
+          <div class="flex-1 text-center border-l border-border transition-all duration-300">
+            <div class="text-xs text-text-muted uppercase mb-1 transition-colors duration-300">Passed</div>
+            <div class="font-bold text-text-primary transition-colors duration-300" x-data="{ count: '...' }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => count = d.snake.models.filter(m => m.status === 'Pass').length)" x-text="count"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Models Grid -->
@@ -95,18 +125,18 @@
 
           getStatusBadgeClass(status) {
             const statusMap = {
-              'Godlike': 'badge-godlike',
-              'Redeemed': 'badge-redeemed',
+              'Pass': 'badge-pass',
+              'Fixed': 'badge-fixed',
               'Failed': 'badge-failed'
             };
-            return statusMap[status] || 'badge-redeemed';
+            return statusMap[status] || 'badge-fixed';
           },
 
           getStatusIcon(status) {
             const iconMap = {
-              'Godlike': '🏆',
-              'Redeemed': '✨',
-              'Failed': '🤡'
+              'Pass': '✅',
+              'Fixed': '⚠️',
+              'Failed': '❌'
             };
             return iconMap[status] || '📦';
           },
@@ -121,8 +151,8 @@
         <!-- Loading State -->
         <template x-if="loading">
           <div class="col-span-full text-center py-20">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-            <p class="mt-4 text-text-secondary">加载模型数据中...</p>
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent" role="status" aria-label="Loading"></div>
+            <p class="mt-4 text-text-secondary">Loading model data...</p>
           </div>
         </template>
 
@@ -142,12 +172,12 @@
               <!-- Model Stats -->
               <div class="space-y-2 mb-6 text-sm">
                 <div class="flex justify-between">
-                  <span class="text-text-muted">尝试次数</span>
-                  <span x-text="model.tries + ' 次'"></span>
+                  <span class="text-text-muted">Attempts</span>
+                  <span x-text="model.tries"></span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-text-muted">Round 2</span>
-                  <span x-text="model.r2_file ? '✓ 有' : '✗ 无'"></span>
+                  <span x-text="model.r2_file ? '✓ Available' : '✗ Not Available'"></span>
                 </div>
               </div>
 
@@ -159,26 +189,31 @@
                 <a
                   :href="getPlayUrl(model)"
                   class="btn-primary w-full text-center inline-block"
+                  :aria-label="`Play ${model.name} implementation`"
                 >
-                  🎮 开始游戏
+                  🎮 Play Game
                 </a>
                 <div class="flex gap-2">
                   <a
                     :href="model.r1_file"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="btn-secondary flex-1 text-center text-sm"
                     @click.stop
+                    aria-label="View Round 1 source code"
                   >
-                    R1 源码
+                    R1 Code
                   </a>
                   <a
                     x-show="model.r2_file"
                     :href="model.r2_file"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="btn-secondary flex-1 text-center text-sm"
                     @click.stop
+                    aria-label="View Round 2 source code"
                   >
-                    R2 源码
+                    R2 Code
                   </a>
                 </div>
               </div>
@@ -190,69 +225,52 @@
   </section>
 
   <!-- Game Rules Section -->
-  <section class="py-20 bg-gradient-to-b from-transparent to-slate-900/50">
+  <section class="py-24" role="complementary">
     <div class="container-custom">
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-center mb-12">Snake 游戏规则</h2>
+        <h2 class="text-center mb-16 text-3xl font-bold tracking-tight">Game Rules & Technical Requirements</h2>
 
-        <div class="grid md:grid-cols-2 gap-8">
+        <div class="grid md:grid-cols-2 gap-12">
           <!-- Controls -->
-          <div class="card">
-            <div class="text-4xl mb-4">🎮</div>
-            <h3 class="text-xl mb-3">控制方式</h3>
-            <ul class="text-text-secondary space-y-2">
-              <li>• <kbd class="kbd">↑</kbd> <kbd class="kbd">↓</kbd> <kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd> 方向键控制蛇的移动</li>
-              <li>• 蛇不能撞到墙壁或自己的身体</li>
-              <li>• 吃到食物蛇身会变长</li>
+          <article class="space-y-4">
+            <div class="text-accent font-bold text-sm tracking-widest uppercase">Controls</div>
+            <h3 class="text-2xl font-bold">How to Play</h3>
+            <ul class="text-text-secondary text-lg space-y-3">
+              <li class="flex items-center gap-2">• <span class="flex gap-1"><kbd class="px-2 py-1 bg-bg-card border border-border rounded text-xs font-mono">↑</kbd><kbd class="px-2 py-1 bg-bg-card border border-border rounded text-xs font-mono">↓</kbd><kbd class="px-2 py-1 bg-bg-card border border-border rounded text-xs font-mono">←</kbd><kbd class="px-2 py-1 bg-bg-card border border-border rounded text-xs font-mono">→</kbd></span> Arrow keys to move</li>
+              <li>• Avoid hitting walls or the snake's own body</li>
+              <li>• Eat food to grow longer and score points</li>
             </ul>
-          </div>
+          </article>
 
-          <!-- Scoring -->
-          <div class="card">
-            <div class="text-4xl mb-4">🏆</div>
-            <h3 class="text-xl mb-3">得分规则</h3>
-            <ul class="text-text-secondary space-y-2">
-              <li>• 每吃到一个食物得分 +1</li>
-              <li>• 蛇身越长难度越大</li>
-              <li>• 游戏结束时显示最终得分</li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Technical Requirements -->
-        <div class="card mt-8">
-          <h3 class="text-xl mb-4">技术实现要点</h3>
-          <div class="grid md:grid-cols-3 gap-6">
-            <div class="text-center">
-              <div class="text-2xl mb-2">🔄</div>
-              <div class="font-semibold mb-1">游戏循环</div>
-              <div class="text-sm text-text-secondary">稳定的帧率和游戏状态更新</div>
+          <!-- Requirements -->
+          <article class="space-y-4">
+            <div class="text-accent font-bold text-sm tracking-widest uppercase">Requirements</div>
+            <h3 class="text-2xl font-bold">Technical Challenges</h3>
+            <div class="grid grid-cols-1 gap-4">
+              <div class="p-4 bg-bg-card border border-border rounded-xl">
+                <div class="font-semibold mb-1">Stable Game Loop</div>
+                <div class="text-sm text-text-muted">Frame rate control to ensure consistent speed across different devices.</div>
+              </div>
+              <div class="p-4 bg-bg-card border border-border rounded-xl">
+                <div class="font-semibold mb-1">Collision Detection</div>
+                <div class="text-sm text-text-muted">Handle interactions between snake head, food, walls, and snake body.</div>
+              </div>
             </div>
-            <div class="text-center">
-              <div class="text-2xl mb-2">🎯</div>
-              <div class="font-semibold mb-1">碰撞检测</div>
-              <div class="text-sm text-text-secondary">准确的边界和自撞检测</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl mb-2">📊</div>
-              <div class="text-sm text-text-secondary">得分系统</div>
-              <div class="font-semibold mb-1">界面渲染</div>
-            </div>
-          </div>
+          </article>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="py-12 border-t border-slate-800">
+  <footer class="py-12 border-t border-border" role="contentinfo">
     <div class="container-custom text-center">
-      <p class="text-text-muted mb-4">
-        Snake 竞技场 - AI Game Arena
+      <p class="text-text-muted mb-6">
+        Snake Benchmark - AI Game Benchmark
       </p>
-      <div class="flex justify-center gap-4">
-        <a href="../../" class="btn-secondary">返回主场</a>
-        <a href="../../#games" class="btn-secondary">其他游戏</a>
+      <div class="flex justify-center gap-6">
+        <a href="../../" class="btn-secondary" aria-label="Back to home">Back to Home</a>
+        <a href="../../#games" class="btn-secondary" aria-label="View other games">Other Games</a>
       </div>
     </div>
   </footer>
