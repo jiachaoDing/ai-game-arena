@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game - DeepSeek-V3 (Round 2 - Fixed)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #0f172a;
+      font-family: Arial, sans-serif;
+    }
+    
+    .container {
+      text-align: center;
+      color: #f8fafc;
+    }
+    
+    h1 {
+      color: #38bdf8;
+      margin-bottom: 10px;
+    }
+    
+    #score {
+      font-size: 24px;
+      margin: 10px 0;
+      color: #94a3b8;
+    }
+    
+    canvas {
+      border: 2px solid #38bdf8;
+      display: block;
+      margin: 20px auto;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+    }
+    
+    .info {
+      margin-top: 10px;
+      color: #64748b;
+    }
+    
+    #gameOver {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(15, 23, 42, 0.95);
+      padding: 30px 50px;
+      border: 2px solid #ef4444;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    #gameOver.show {
+      display: block;
+    }
+    
+    #gameOver button {
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 10px 25px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    
+    #gameOver button:hover {
+      background: #0ea5e9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🐍 Snake Game</h1>
+    <div id="score">Score: 0</div>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <div class="info">Use arrow keys to move</div>
+  </div>
+  
+  <div id="gameOver">
+    <h2 style="color: #ef4444;">Game Over!</h2>
+    <p style="font-size: 20px; color: #fbbf24;">Final Score: <span id="finalScore">0</span></p>
+    <button onclick="restart()">Play Again</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const gridSize = 20;
+    const tileCount = 20;
+    
+    let snake = [];
+    let velocityX = 1;
+    let velocityY = 0;
+    let foodX = 15;
+    let foodY = 15;
+    let score = 0;
+    let gameInterval;
+    let gameRunning = true;
+    
+    function init() {
+      snake = [
+        { x: 10, y: 10 },
+        { x: 9, y: 10 },
+        { x: 8, y: 10 }
+      ];
+      velocityX = 1;
+      velocityY = 0;
+      score = 0;
+      gameRunning = true;
+      document.getElementById('score').textContent = 'Score: 0';
+      document.getElementById('gameOver').classList.remove('show');
+      placeFood();
+      
+      if (gameInterval) clearInterval(gameInterval);
+      gameInterval = setInterval(gameLoop, 100);
+    }
+    
+    function gameLoop() {
+      if (!gameRunning) return;
+      
+      updateSnake();
+      
+      // FIXED: Added collision detection
+      if (checkCollision()) {
+        gameOver();
+        return;
+      }
+      
+      draw();
+    }
+    
+    function updateSnake() {
+      const head = { x: snake[0].x + velocityX, y: snake[0].y + velocityY };
+      snake.unshift(head);
+      
+      if (head.x === foodX && head.y === foodY) {
+        score++;
+        document.getElementById('score').textContent = 'Score: ' + score;
+        placeFood();
+      } else {
+        snake.pop();
+      }
+    }
+    
+    // FIXED: Added proper collision detection
+    function checkCollision() {
+      const head = snake[0];
+      
+      // Wall collision
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        return true;
+      }
+      
+      // Self collision
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          return true;
+        }
+      }
+      
+      return false;
+    }
+    
+    function placeFood() {
+      while (true) {
+        foodX = Math.floor(Math.random() * tileCount);
+        foodY = Math.floor(Math.random() * tileCount);
+        
+        // Check if food is on snake
+        const onSnake = snake.some(segment => segment.x === foodX && segment.y === foodY);
+        if (!onSnake) break;
+      }
+    }
+    
+    function draw() {
+      // Background
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Snake
+      ctx.fillStyle = '#38bdf8';
+      snake.forEach((segment, index) => {
+        ctx.fillRect(segment.x * gridSize + 1, segment.y * gridSize + 1, gridSize - 2, gridSize - 2);
+        
+        // Head glow
+        if (index === 0) {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#38bdf8';
+        } else {
+          ctx.shadowBlur = 0;
+        }
+      });
+      
+      // Food
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#fbbf24';
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.arc(
+        foodX * gridSize + gridSize / 2,
+        foodY * gridSize + gridSize / 2,
+        gridSize / 2 - 1,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    
+    function gameOver() {
+      gameRunning = false;
+      clearInterval(gameInterval);
+      document.getElementById('finalScore').textContent = score;
+      document.getElementById('gameOver').classList.add('show');
+    }
+    
+    function restart() {
+      init();
+    }
+    
+    document.addEventListener('keydown', (e) => {
+      if (!gameRunning) return;
+      
+      switch(e.key) {
+        case 'ArrowUp':
+          if (velocityY !== 1) {
+            velocityX = 0;
+            velocityY = -1;
+          }
+          break;
+        case 'ArrowDown':
+          if (velocityY !== -1) {
+            velocityX = 0;
+            velocityY = 1;
+          }
+          break;
+        case 'ArrowLeft':
+          if (velocityX !== 1) {
+            velocityX = -1;
+            velocityY = 0;
+          }
+          break;
+        case 'ArrowRight':
+          if (velocityX !== -1) {
+            velocityX = 1;
+            velocityY = 0;
+          }
+          break;
+      }
+    });
+    
+    // Start game
+    init();
+  </script>
+</body>
+</html>
+

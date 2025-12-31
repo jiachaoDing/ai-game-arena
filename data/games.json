@@ -1,0 +1,38 @@
+{
+  "snake": {
+    "title": "Retro Snake",
+    "prompt_file": "/prompts/snake.md",
+    "description": "The classic Nokia era game.",
+    "icon": "🐍",
+    "models": [
+      {
+        "id": "gpt4o",
+        "name": "GPT-4o",
+        "status": "Godlike",
+        "r1_file": "/games/snake/gpt4o-r1.html",
+        "r2_file": null,
+        "notes": "Perfect execution on first try.",
+        "tries": 1
+      },
+      {
+        "id": "deepseek-v3",
+        "name": "DeepSeek-V3",
+        "status": "Redeemed",
+        "r1_file": "/games/snake/deepseek-v3-r1.html",
+        "r2_file": "/games/snake/deepseek-v3-r2.html",
+        "notes": "Fixed collision detection in Round 2.",
+        "tries": 3
+      },
+      {
+        "id": "claude-3-opus",
+        "name": "Claude 3 Opus",
+        "status": "Godlike",
+        "r1_file": "/games/snake/claude-3-opus-r1.html",
+        "r2_file": null,
+        "notes": "Flawless implementation with elegant code.",
+        "tries": 1
+      }
+    ]
+  }
+}
+

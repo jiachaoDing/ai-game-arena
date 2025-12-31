@@ -1,0 +1,17 @@
+{
+  "name": "ai-game-arena",
+  "version": "1.0.0",
+  "description": "Visualizing LLM Coding Capabilities through Games",
+  "scripts": {
+    "build:css": " npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css",
+    "watch:css": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --watch",
+    "dev": "npm run watch:css"
+  },
+  "keywords": ["ai", "games", "llm", "visualization"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^4.0.0"
+  }
+}
+

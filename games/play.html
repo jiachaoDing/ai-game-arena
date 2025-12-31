@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI Game Arena - 游戏演示">
+  <title>AI Game Arena - 游戏演示</title>
+
+  <!-- Tailwind CSS v4.0 Output -->
+  <link rel="stylesheet" href="../dist/output.css">
+
+  <!-- Alpine.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div
+    x-data="{
+      currentVersion: 'r1',
+      gameData: null,
+      modelData: null,
+      gameId: '',
+      modelId: '',
+      loading: true,
+
+      init() {
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        this.gameId = urlParams.get('game') || 'snake';
+        this.modelId = urlParams.get('model') || 'gpt4o';
+        this.loadData();
+      },
+
+      async loadData() {
+        try {
+          const response = await fetch('../data/games.json');
+          const games = await response.json();
+          this.gameData = games[this.gameId];
+          this.modelData = this.gameData?.models.find(m => m.id === this.modelId);
+
+          if (!this.modelData) {
+            console.error('Model not found');
+            this.loading = false;
+            return;
+          }
+
+          // If no Round 2, default to R1
+          if (!this.modelData.r2_file) {
+            this.currentVersion = 'r1';
+          }
+
+          this.loading = false;
+        } catch (error) {
+          console.error('Failed to load data:', error);
+          this.loading = false;
+        }
+      },
+
+      get currentIframeSrc() {
+        if (!this.modelData) return '';
+        return this.currentVersion === 'r2' && this.modelData.r2_file
+          ? this.modelData.r2_file
+          : this.modelData.r1_file;
+      },
+
+      getStatusBadgeClass(status) {
+        const statusMap = {
+          'Godlike': 'badge-godlike',
+          'Redeemed': 'badge-redeemed',
+          'Failed': 'badge-failed'
+        };
+        return statusMap[status] || 'badge-redeemed';
+      },
+
+      getStatusIcon(status) {
+        const iconMap = {
+          'Godlike': '🏆',
+          'Redeemed': '✨',
+          'Failed': '🤡'
+        };
+        return iconMap[status] || '📦';
+      }
+    }"
+    x-init="init()"
+    class="min-h-screen bg-slate-900 text-white"
+  >
+    <!-- Loading State -->
+    <div x-show="loading" class="min-h-screen flex items-center justify-center">
+      <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent mb-4"></div>
+        <p class="text-text-secondary">加载游戏中...</p>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div x-show="!loading" class="min-h-screen">
+      <!-- Header -->
+      <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
+        <div class="container-custom py-4">
+          <div class="flex items-center justify-between">
+            <!-- Back Button -->
+            <a href="./" class="flex items-center gap-2 text-text-secondary hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              <span>返回列表</span>
+            </a>
+
+            <!-- Title -->
+            <div class="text-center">
+              <h1 class="text-xl font-semibold" x-text="gameData?.title"></h1>
+              <div class="text-sm text-text-secondary" x-text="modelData?.name"></div>
+            </div>
+
+            <!-- Status Badge -->
+            <div class="badge" :class="getStatusBadgeClass(modelData?.status)">
+              <span x-text="getStatusIcon(modelData?.status)"></span>
+              <span class="ml-1" x-text="modelData?.status"></span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Game Container -->
+      <div class="container-custom py-8">
+        <div class="max-w-4xl mx-auto">
+          <!-- Version Toggle (only show if Round 2 exists) -->
+          <div x-show="modelData?.r2_file" class="flex justify-center mb-6">
+            <div class="bg-slate-800 rounded-lg p-1 flex">
+              <button
+                @click="currentVersion = 'r1'"
+                :class="currentVersion === 'r1' ? 'bg-accent text-white' : 'text-text-secondary hover:text-white'"
+                class="px-4 py-2 rounded-md transition-colors"
+              >
+                Round 1 (初生成)
+              </button>
+              <button
+                @click="currentVersion = 'r2'"
+                :class="currentVersion === 'r2' ? 'bg-accent text-white' : 'text-text-secondary hover:text-white'"
+                class="px-4 py-2 rounded-md transition-colors"
+              >
+                Round 2 (修复版)
+              </button>
+            </div>
+          </div>
+
+          <!-- Game Iframe -->
+          <div class="bg-slate-800 rounded-xl overflow-hidden shadow-2xl">
+            <iframe
+              :src="currentIframeSrc"
+              class="w-full h-[600px] border-0"
+              title="AI Generated Game"
+            ></iframe>
+          </div>
+
+          <!-- Game Info -->
+          <div class="mt-6 grid md:grid-cols-2 gap-6">
+            <!-- Model Info -->
+            <div class="glass rounded-xl p-6">
+              <h3 class="text-lg font-semibold mb-4">模型信息</h3>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-text-secondary">模型名称</span>
+                  <span x-text="modelData?.name"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-text-secondary">尝试次数</span>
+                  <span x-text="modelData?.tries + ' 次'"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-text-secondary">最终状态</span>
+                  <div class="badge" :class="getStatusBadgeClass(modelData?.status)" x-text="modelData?.status"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="glass rounded-xl p-6">
+              <h3 class="text-lg font-semibold mb-4">评测笔记</h3>
+              <p class="text-text-secondary" x-text="modelData?.notes"></p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mt-8 flex flex-wrap gap-4 justify-center">
+            <a
+              :href="modelData?.r1_file"
+              target="_blank"
+              class="btn-secondary"
+            >
+              查看 Round 1 源码
+            </a>
+            <a
+              x-show="modelData?.r2_file"
+              :href="modelData?.r2_file"
+              target="_blank"
+              class="btn-secondary"
+            >
+              查看 Round 2 源码
+            </a>
+            <a href="./" class="btn-primary">
+              返回游戏列表
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game - DeepSeek-V3 (Round 1 - With Bug)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #0f172a;
+      font-family: Arial, sans-serif;
+    }
+    
+    .container {
+      text-align: center;
+      color: #f8fafc;
+    }
+    
+    h1 {
+      color: #38bdf8;
+      margin-bottom: 10px;
+    }
+    
+    #score {
+      font-size: 24px;
+      margin: 10px 0;
+      color: #94a3b8;
+    }
+    
+    canvas {
+      border: 2px solid #38bdf8;
+      display: block;
+      margin: 20px auto;
+    }
+    
+    .info {
+      margin-top: 10px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Snake Game</h1>
+    <div id="score">Score: 0</div>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <div class="info">Use arrow keys to move</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const gridSize = 20;
+    const tileCount = 20;
+    
+    let snake = [{ x: 10, y: 10 }];
+    let velocityX = 1;
+    let velocityY = 0;
+    let foodX = 15;
+    let foodY = 15;
+    let score = 0;
+    
+    // BUG: Missing boundary check - this was the issue in Round 1
+    function gameLoop() {
+      updateSnake();
+      checkCollision(); // This function is missing!
+      draw();
+    }
+    
+    function updateSnake() {
+      const head = { x: snake[0].x + velocityX, y: snake[0].y + velocityY };
+      snake.unshift(head);
+      
+      if (head.x === foodX && head.y === foodY) {
+        score++;
+        document.getElementById('score').textContent = 'Score: ' + score;
+        placeFood();
+      } else {
+        snake.pop();
+      }
+    }
+    
+    function placeFood() {
+      foodX = Math.floor(Math.random() * tileCount);
+      foodY = Math.floor(Math.random() * tileCount);
+    }
+    
+    function draw() {
+      // Background
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Snake
+      ctx.fillStyle = '#38bdf8';
+      snake.forEach(segment => {
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+      });
+      
+      // Food
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(foodX * gridSize, foodY * gridSize, gridSize - 2, gridSize - 2);
+    }
+    
+    document.addEventListener('keydown', (e) => {
+      switch(e.key) {
+        case 'ArrowUp':
+          if (velocityY !== 1) {
+            velocityX = 0;
+            velocityY = -1;
+          }
+          break;
+        case 'ArrowDown':
+          if (velocityY !== -1) {
+            velocityX = 0;
+            velocityY = 1;
+          }
+          break;
+        case 'ArrowLeft':
+          if (velocityX !== 1) {
+            velocityX = -1;
+            velocityY = 0;
+          }
+          break;
+        case 'ArrowRight':
+          if (velocityX !== -1) {
+            velocityX = 1;
+            velocityY = 0;
+          }
+          break;
+      }
+    });
+    
+    setInterval(gameLoop, 100);
+  </script>
+</body>
+</html>
+

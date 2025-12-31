@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI Game Arena - 通过游戏可视化展示 AI 编程能力">
+  <title>AI Game Arena - Visualizing LLM Coding Capabilities</title>
+  
+  <!-- Tailwind CSS v4.0 Output -->
+  <link rel="stylesheet" href="./dist/output.css">
+  
+  <!-- Alpine.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <!-- Hero Section -->
+  <section class="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div class="container-custom text-center my-20">
+      <!-- Main Heading -->
+      <div class="space-y-6 mb-12">
+        <h1 class="text-gradient animate-fade-in">
+          AI Game Arena
+        </h1>
+        <p class="text-2xl md:text-3xl text-text-secondary max-w-3xl mx-auto text-balance">
+          Visualizing AI Code Through Games
+        </p>
+        <p class="text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
+          拒绝枯燥跑分，用游戏直观展示 AI 编程能力。<br>
+          无人工干预，展示最真实的代码现场。
+        </p>
+      </div>
+      
+      <!-- CTA Buttons -->
+      <div class="flex flex-wrap gap-4 justify-center mb-20">
+        <a href="#games" class="btn-primary">
+          探索游戏竞技场 →
+        </a>
+        <a href="https://github.com/yourusername/ai-game-arena" target="_blank" class="btn-secondary">
+          GitHub 仓库
+        </a>
+      </div>
+      
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div class="glass rounded-2xl p-6">
+          <div class="text-4xl font-bold text-accent mb-2">12+</div>
+          <div class="text-text-secondary">AI 模型测试</div>
+        </div>
+        <div class="glass rounded-2xl p-6">
+          <div class="text-4xl font-bold text-accent mb-2">5+</div>
+          <div class="text-text-secondary">经典游戏</div>
+        </div>
+        <div class="glass rounded-2xl p-6">
+          <div class="text-4xl font-bold text-accent mb-2">100%</div>
+          <div class="text-text-secondary">真实代码</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Scroll Indicator -->
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+      <svg class="w-6 h-6 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Games Grid Section -->
+  <section id="games" class="py-20">
+    <div class="container-custom">
+      <!-- Section Header -->
+      <div class="text-center mb-16">
+        <h2 class="mb-4">游戏竞技场</h2>
+        <p class="text-xl text-text-secondary max-w-2xl mx-auto">
+          每个游戏都经历 Round 1 (初生成) 和 Round 2 (自修复) 两轮测试
+        </p>
+      </div>
+      
+      <!-- Games Grid -->
+      <div 
+        x-data="{
+          games: {},
+          loading: true,
+          
+          async loadGames() {
+            try {
+              const response = await fetch('./data/games.json');
+              this.games = await response.json();
+              this.loading = false;
+            } catch (error) {
+              console.error('Failed to load games:', error);
+              this.loading = false;
+            }
+          },
+          
+          getStatusBadgeClass(status) {
+            const statusMap = {
+              'Godlike': 'badge-godlike',
+              'Redeemed': 'badge-redeemed',
+              'Failed': 'badge-failed'
+            };
+            return statusMap[status] || 'badge-redeemed';
+          },
+          
+          getStatusIcon(status) {
+            const iconMap = {
+              'Godlike': '🏆',
+              'Redeemed': '✨',
+              'Failed': '🤡'
+            };
+            return iconMap[status] || '📦';
+          }
+        }"
+        x-init="loadGames()"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+      >
+        <!-- Loading State -->
+        <template x-if="loading">
+          <div class="col-span-full text-center py-20">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+            <p class="mt-4 text-text-secondary">加载游戏数据中...</p>
+          </div>
+        </template>
+        
+        <!-- Games Cards -->
+        <template x-if="!loading">
+          <template x-for="(game, gameId) in games" :key="gameId">
+            <div class="card group cursor-pointer hover:scale-[1.02]">
+              <!-- Game Icon -->
+              <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300" x-text="game.icon"></div>
+              
+              <!-- Game Title -->
+              <h3 class="text-2xl mb-3 group-hover:text-accent transition-colors" x-text="game.title"></h3>
+              
+              <!-- Description -->
+              <p class="text-text-secondary mb-6" x-text="game.description"></p>
+              
+              <!-- Models Count -->
+              <div class="flex items-center justify-between mb-4 text-sm">
+                <span class="text-text-muted">
+                  <span x-text="game.models.length"></span> 个模型参战
+                </span>
+                <a 
+                  :href="game.prompt_file" 
+                  target="_blank"
+                  class="text-accent hover:text-accent-hover flex items-center gap-1"
+                  @click.stop
+                >
+                  <span>查看 Prompt</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                  </svg>
+                </a>
+              </div>
+              
+              <!-- Status Preview -->
+              <div class="flex flex-wrap gap-2">
+                <template x-for="model in game.models.slice(0, 3)" :key="model.id">
+                  <div class="badge text-xs" :class="getStatusBadgeClass(model.status)">
+                    <span x-text="getStatusIcon(model.status)"></span>
+                    <span class="ml-1" x-text="model.name"></span>
+                  </div>
+                </template>
+              </div>
+              
+              <!-- View Details Button -->
+              <div class="mt-6 pt-6 border-t border-slate-700/50">
+                <a 
+                  :href="`./games/${gameId}/`" 
+                  class="btn-secondary w-full text-center inline-block"
+                >
+                  进入战场 →
+                </a>
+              </div>
+            </div>
+          </template>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- Philosophy Section -->
+  <section class="py-20 bg-gradient-to-b from-transparent to-slate-900/50">
+    <div class="container-custom">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-center mb-12">评测原则</h2>
+        
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Round 1 -->
+          <div class="card">
+            <div class="text-4xl mb-4">🎯</div>
+            <h3 class="text-xl mb-3">Round 1: One-Shot</h3>
+            <p class="text-text-secondary mb-4">
+              AI 收到统一标准 Prompt 后直接输出代码。无论成败，保留该版本作为"初始能力"证据。
+            </p>
+            <div class="badge badge-godlike">一次通关</div>
+          </div>
+          
+          <!-- Round 2 -->
+          <div class="card">
+            <div class="text-4xl mb-4">🔧</div>
+            <h3 class="text-xl mb-3">Round 2: Debug</h3>
+            <p class="text-text-secondary mb-4">
+              允许 3 轮对话以内的调试。将错误信息反馈给 AI，观察其自我修复能力。
+            </p>
+            <div class="badge badge-redeemed">救赎成功</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-slate-800">
+    <div class="container-custom text-center">
+      <p class="text-text-muted mb-4">
+        AI Game Arena - 用游戏直观展示 AI 编程能力
+      </p>
+      <p class="text-sm text-text-muted">
+        Built with Tailwind CSS v4.0 & Alpine.js • 
+        <a href="https://github.com/yourusername/ai-game-arena" class="hover:text-accent transition-colors">
+          Open Source on GitHub
+        </a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
+

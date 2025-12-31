@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI Game Arena - 模型详情与代码对比">
+  <title>模型详情 - AI Game Arena</title>
+  
+  <!-- Tailwind CSS v4.0 Output -->
+  <link rel="stylesheet" href="../../dist/output.css">
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div 
+    x-data="{
+      currentVersion: 'r1',
+      gameData: null,
+      modelData: null,
+      gameId: 'snake',
+      modelId: 'gpt4o',
+      loading: true,
+      
+      async loadData() {
+        try {
+          const response = await fetch('../../data/games.json');
+          const games = await response.json();
+          this.gameData = games[this.gameId];
+          this.modelData = this.gameData.models.find(m => m.id === this.modelId);
+          this.loading = false;
+          
+          // If no Round 2, default to R1
+          if (!this.modelData.r2_file) {
+            this.currentVersion = 'r1';
+          }
+        } catch (error) {
+          console.error('Failed to load data:', error);
+          this.loading = false;
+        }
+      },
+      
+      get currentIframeSrc() {
+        if (this.currentVersion === 'r2' && this.modelData?.r2_file) {
+          return this.modelData.r2_file;
+        }
+        return this.modelData?.r1_file || '';
+      },
+      
+      get hasRound2() {
+        return this.modelData?.r2_file !== null && this.modelData?.r2_file !== undefined;
+      },
+      
+      get statusBadgeClass() {
+        const statusMap = {
+          'Godlike': 'badge-godlike',
+          'Redeemed': 'badge-redeemed',
+          'Failed': 'badge-failed'
+        };
+        return statusMap[this.modelData?.status] || 'badge-redeemed';
+      },
+      
+      downloadHTML() {
+        const iframe = document.querySelector('#game-iframe');
+        if (iframe && iframe.src) {
+          window.open(iframe.src, '_blank');
+        }
+      }
+    }"
+    x-init="loadData()"
+  >
+    <!-- Navigation Bar -->
+    <nav class="sticky top-0 z-50 glass border-b border-slate-700/50">
+      <div class="container-custom py-4">
+        <div class="flex items-center justify-between">
+          <!-- Breadcrumb -->
+          <div class="flex items-center gap-3 text-sm">
+            <a href="../../index.html" class="text-text-muted hover:text-accent transition-colors">
+              首页
+            </a>
+            <span class="text-text-muted">/</span>
+            <a href="../" class="text-text-muted hover:text-accent transition-colors" x-text="gameData?.title || 'Loading...'">
+            </a>
+            <span class="text-text-muted">/</span>
+            <span class="text-text-primary" x-text="modelData?.name || 'Loading...'"></span>
+          </div>
+          
+          <!-- Actions -->
+          <div class="flex items-center gap-3">
+            <button @click="downloadHTML()" class="btn-ghost">
+              <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              下载 HTML
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-12">
+      <div class="container-custom">
+        <!-- Loading State -->
+        <template x-if="loading">
+          <div class="text-center py-20">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+            <p class="mt-4 text-text-secondary">加载游戏数据中...</p>
+          </div>
+        </template>
+        
+        <!-- Content -->
+        <template x-if="!loading && modelData">
+          <div>
+            <!-- Header -->
+            <div class="mb-8">
+              <div class="flex flex-wrap items-center gap-4 mb-4">
+                <h1 class="text-4xl" x-text="modelData.name + ' 的实现'"></h1>
+                <div class="badge text-base" :class="statusBadgeClass" x-text="modelData.status"></div>
+              </div>
+              <p class="text-xl text-text-secondary" x-text="modelData.notes"></p>
+              
+              <!-- Meta Info -->
+              <div class="flex flex-wrap gap-6 mt-6 text-sm">
+                <div class="flex items-center gap-2">
+                  <span class="text-text-muted">游戏:</span>
+                  <span class="text-text-primary" x-text="gameData.title"></span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-text-muted">尝试次数:</span>
+                  <span class="text-text-primary" x-text="modelData.tries"></span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-text-muted">Prompt:</span>
+                  <a :href="gameData.prompt_file" target="_blank" class="text-accent hover:text-accent-hover">
+                    查看原始 Prompt →
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Version Toggle (Control Bar) -->
+            <div class="flex justify-center mb-8">
+              <div class="toggle-group">
+                <button 
+                  @click="currentVersion = 'r1'" 
+                  :class="currentVersion === 'r1' ? 'toggle-btn toggle-btn-active' : 'toggle-btn'"
+                  class="relative"
+                >
+                  <span class="relative z-10">Round 1 (初生成)</span>
+                </button>
+                
+                <button 
+                  @click="currentVersion = 'r2'" 
+                  :class="currentVersion === 'r2' ? 'toggle-btn toggle-btn-active' : 'toggle-btn'"
+                  :disabled="!hasRound2"
+                  class="relative disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span class="relative z-10">Round 2 (修复版)</span>
+                  <template x-if="!hasRound2">
+                    <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs text-text-muted whitespace-nowrap">
+                      一次通关 ✨
+                    </span>
+                  </template>
+                </button>
+              </div>
+            </div>
+
+            <!-- Game Viewport (Iframe) -->
+            <div class="card !p-0 overflow-hidden mb-8">
+              <div class="bg-slate-950 p-4 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="status-dot status-dot-success"></div>
+                  <span class="text-sm font-mono text-text-secondary">
+                    <span x-text="currentVersion === 'r2' ? 'Round 2' : 'Round 1'"></span> - 
+                    <span x-text="modelData.name"></span>
+                  </span>
+                </div>
+                <div class="text-xs text-text-muted font-mono" x-text="currentIframeSrc"></div>
+              </div>
+              
+              <iframe 
+                id="game-iframe"
+                :src="currentIframeSrc"
+                class="w-full h-[600px] bg-black"
+                sandbox="allow-scripts allow-same-origin"
+                frameborder="0"
+                loading="lazy"
+              ></iframe>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="grid md:grid-cols-2 gap-6">
+              <!-- Implementation Notes -->
+              <div class="card">
+                <h3 class="text-xl mb-4 flex items-center gap-2">
+                  <span>📝</span>
+                  <span>实现说明</span>
+                </h3>
+                <div class="space-y-3 text-text-secondary">
+                  <p x-text="modelData.notes"></p>
+                  
+                  <template x-if="hasRound2 && currentVersion === 'r2'">
+                    <div class="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-800">
+                      <div class="text-sm font-medium text-success mb-2">✓ Round 2 修复记录</div>
+                      <p class="text-sm">在 <span x-text="modelData.tries"></span> 次对话内成功修复问题</p>
+                    </div>
+                  </template>
+                  
+                  <template x-if="!hasRound2">
+                    <div class="mt-4 p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg border border-yellow-500/30">
+                      <div class="text-sm font-medium text-yellow-300 mb-2">🏆 完美表现</div>
+                      <p class="text-sm">首次生成即完美运行，无需修复</p>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              
+              <!-- Technical Details -->
+              <div class="card">
+                <h3 class="text-xl mb-4 flex items-center gap-2">
+                  <span>⚙️</span>
+                  <span>技术细节</span>
+                </h3>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                    <span class="text-text-muted">模型</span>
+                    <span class="font-mono text-text-primary" x-text="modelData.name"></span>
+                  </div>
+                  <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                    <span class="text-text-muted">状态</span>
+                    <span class="badge text-xs" :class="statusBadgeClass" x-text="modelData.status"></span>
+                  </div>
+                  <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                    <span class="text-text-muted">尝试次数</span>
+                    <span class="text-text-primary" x-text="modelData.tries"></span>
+                  </div>
+                  <div class="flex justify-between items-center py-2">
+                    <span class="text-text-muted">文件大小</span>
+                    <span class="text-text-primary">Single HTML</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-slate-800 mt-12">
+      <div class="container-custom text-center">
+        <p class="text-sm text-text-muted">
+          <a href="../../index.html" class="hover:text-accent transition-colors">返回首页</a>
+          <span class="mx-2">•</span>
+          <a href="https://github.com/yourusername/ai-game-arena" class="hover:text-accent transition-colors">GitHub</a>
+        </p>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
+

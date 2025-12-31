@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI Game Arena - Snake 游戏竞技场">
+  <title>🐍 Snake - AI Game Arena</title>
+
+  <!-- Tailwind CSS v4.0 Output -->
+  <link rel="stylesheet" href="../../dist/output.css">
+
+  <!-- Alpine.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <!-- Hero Section -->
+  <section class="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div class="container-custom text-center my-20">
+      <!-- Game Icon & Title -->
+      <div class="space-y-6 mb-12">
+        <div class="text-8xl animate-bounce">🐍</div>
+        <h1 class="text-gradient animate-fade-in">
+          Snake 竞技场
+        </h1>
+        <p class="text-xl md:text-2xl text-text-secondary max-w-2xl mx-auto">
+          经典贪吃蛇游戏，考验 AI 的游戏逻辑实现能力
+        </p>
+        <p class="text-lg text-text-muted max-w-xl mx-auto leading-relaxed">
+          从键盘控制到碰撞检测，从分数系统到游戏循环，每个细节都体现 AI 的编程水平。
+        </p>
+      </div>
+
+      <!-- Back to Home -->
+      <div class="mb-12">
+        <a href="../../" class="btn-secondary">
+          ← 返回主场
+        </a>
+      </div>
+
+      <!-- Game Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+        <div class="glass rounded-2xl p-6">
+          <div class="text-3xl mb-2">🎯</div>
+          <div class="text-2xl font-bold text-accent mb-2" x-data="{ gameData: null }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => gameData = d.snake)" x-text="gameData?.models.length || '3'"></div>
+          <div class="text-text-secondary">AI 模型参战</div>
+        </div>
+        <div class="glass rounded-2xl p-6">
+          <div class="text-3xl mb-2">🏆</div>
+          <div class="text-2xl font-bold text-accent mb-2" x-data="{ gameData: null }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => gameData = d.snake)" x-text="gameData?.models.filter(m => m.status === 'Godlike').length || '2'"></div>
+          <div class="text-text-secondary">一次通关</div>
+        </div>
+        <div class="glass rounded-2xl p-6">
+          <div class="text-3xl mb-2">✨</div>
+          <div class="text-2xl font-bold text-accent mb-2" x-data="{ gameData: null }" x-init="fetch('../../data/games.json').then(r => r.json()).then(d => gameData = d.snake)" x-text="gameData?.models.filter(m => m.status === 'Redeemed').length || '1'"></div>
+          <div class="text-text-secondary">救赎成功</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Models Grid Section -->
+  <section class="py-20">
+    <div class="container-custom">
+      <!-- Section Header -->
+      <div class="text-center mb-16">
+        <h2 class="mb-4">参战模型</h2>
+        <p class="text-xl text-text-secondary max-w-2xl mx-auto">
+          每个模型都经过 Round 1 (初生成) 和 Round 2 (自修复) 两轮测试
+        </p>
+      </div>
+
+      <!-- Models Grid -->
+      <div
+        x-data="{
+          gameData: null,
+          loading: true,
+
+          async loadGameData() {
+            try {
+              const response = await fetch('../../data/games.json');
+              const games = await response.json();
+              this.gameData = games.snake;
+              this.loading = false;
+            } catch (error) {
+              console.error('Failed to load game data:', error);
+              this.loading = false;
+            }
+          },
+
+          getStatusBadgeClass(status) {
+            const statusMap = {
+              'Godlike': 'badge-godlike',
+              'Redeemed': 'badge-redeemed',
+              'Failed': 'badge-failed'
+            };
+            return statusMap[status] || 'badge-redeemed';
+          },
+
+          getStatusIcon(status) {
+            const iconMap = {
+              'Godlike': '🏆',
+              'Redeemed': '✨',
+              'Failed': '🤡'
+            };
+            return iconMap[status] || '📦';
+          },
+
+          getPlayUrl(model) {
+            return `../play.html?game=snake&model=${model.id}`;
+          }
+        }"
+        x-init="loadGameData()"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+      >
+        <!-- Loading State -->
+        <template x-if="loading">
+          <div class="col-span-full text-center py-20">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+            <p class="mt-4 text-text-secondary">加载模型数据中...</p>
+          </div>
+        </template>
+
+        <!-- Model Cards -->
+        <template x-if="!loading && gameData">
+          <template x-for="model in gameData.models" :key="model.id">
+            <div class="card group cursor-pointer hover:scale-[1.02]">
+              <!-- Model Avatar -->
+              <div class="text-4xl mb-4" x-text="getStatusIcon(model.status)"></div>
+
+              <!-- Model Name -->
+              <h3 class="text-xl mb-2" x-text="model.name"></h3>
+
+              <!-- Status Badge -->
+              <div class="badge mb-4" :class="getStatusBadgeClass(model.status)" x-text="model.status"></div>
+
+              <!-- Model Stats -->
+              <div class="space-y-2 mb-6 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-text-muted">尝试次数</span>
+                  <span x-text="model.tries + ' 次'"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-text-muted">Round 2</span>
+                  <span x-text="model.r2_file ? '✓ 有' : '✗ 无'"></span>
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <p class="text-text-secondary text-sm mb-6" x-text="model.notes"></p>
+
+              <!-- Action Buttons -->
+              <div class="space-y-3">
+                <a
+                  :href="getPlayUrl(model)"
+                  class="btn-primary w-full text-center inline-block"
+                >
+                  🎮 开始游戏
+                </a>
+                <div class="flex gap-2">
+                  <a
+                    :href="model.r1_file"
+                    target="_blank"
+                    class="btn-secondary flex-1 text-center text-sm"
+                    @click.stop
+                  >
+                    R1 源码
+                  </a>
+                  <a
+                    x-show="model.r2_file"
+                    :href="model.r2_file"
+                    target="_blank"
+                    class="btn-secondary flex-1 text-center text-sm"
+                    @click.stop
+                  >
+                    R2 源码
+                  </a>
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- Game Rules Section -->
+  <section class="py-20 bg-gradient-to-b from-transparent to-slate-900/50">
+    <div class="container-custom">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-center mb-12">Snake 游戏规则</h2>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Controls -->
+          <div class="card">
+            <div class="text-4xl mb-4">🎮</div>
+            <h3 class="text-xl mb-3">控制方式</h3>
+            <ul class="text-text-secondary space-y-2">
+              <li>• <kbd class="kbd">↑</kbd> <kbd class="kbd">↓</kbd> <kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd> 方向键控制蛇的移动</li>
+              <li>• 蛇不能撞到墙壁或自己的身体</li>
+              <li>• 吃到食物蛇身会变长</li>
+            </ul>
+          </div>
+
+          <!-- Scoring -->
+          <div class="card">
+            <div class="text-4xl mb-4">🏆</div>
+            <h3 class="text-xl mb-3">得分规则</h3>
+            <ul class="text-text-secondary space-y-2">
+              <li>• 每吃到一个食物得分 +1</li>
+              <li>• 蛇身越长难度越大</li>
+              <li>• 游戏结束时显示最终得分</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Technical Requirements -->
+        <div class="card mt-8">
+          <h3 class="text-xl mb-4">技术实现要点</h3>
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="text-center">
+              <div class="text-2xl mb-2">🔄</div>
+              <div class="font-semibold mb-1">游戏循环</div>
+              <div class="text-sm text-text-secondary">稳定的帧率和游戏状态更新</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl mb-2">🎯</div>
+              <div class="font-semibold mb-1">碰撞检测</div>
+              <div class="text-sm text-text-secondary">准确的边界和自撞检测</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl mb-2">📊</div>
+              <div class="text-sm text-text-secondary">得分系统</div>
+              <div class="font-semibold mb-1">界面渲染</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-slate-800">
+    <div class="container-custom text-center">
+      <p class="text-text-muted mb-4">
+        Snake 竞技场 - AI Game Arena
+      </p>
+      <div class="flex justify-center gap-4">
+        <a href="../../" class="btn-secondary">返回主场</a>
+        <a href="../../#games" class="btn-secondary">其他游戏</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
