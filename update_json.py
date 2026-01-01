@@ -52,7 +52,7 @@ def main():
             # 如果是 R2，尝试更新现有模型
             if existing_model:
                 if existing_model.get("r2_file") is None:
-                    existing_model["r2_file"] = f"/games/{GAME_ID}/{filename}"
+                    existing_model["r2_file"] = f"../games/{GAME_ID}/{filename}"
                     existing_model["status"] = "Fixed" # 发现 R2 后状态改为 Fixed
                     existing_model["tries"] = 2       # 尝试次数更新为 2
                     print(f"已为模型 {model_id} 添加 Round 2 修复文件")
@@ -60,7 +60,7 @@ def main():
             else:
                 # 如果 R2 先于 R1 被发现且模型不存在，先创建一个占位模型
                 new_model = create_empty_model(model_id)
-                new_model["r2_file"] = f"/games/{GAME_ID}/{filename}"
+                new_model["r2_file"] = f"../games/{GAME_ID}/{filename}"
                 new_model["status"] = "Fixed"
                 new_model["tries"] = 2
                 data[GAME_ID]["models"].append(new_model)
@@ -70,13 +70,13 @@ def main():
             # 如果是 R1 且模型不存在，则创建
             if not existing_model:
                 new_model = create_empty_model(model_id)
-                new_model["r1_file"] = f"/games/{GAME_ID}/{filename}"
+                new_model["r1_file"] = f"../games/{GAME_ID}/{filename}"
                 data[GAME_ID]["models"].append(new_model)
                 print(f"已添加新模型: {model_id}")
                 changes_made = True
             elif existing_model.get("r1_file") is None:
                 # 如果模型已存在（可能先被 R2 创建了），更新其 R1 路径
-                existing_model["r1_file"] = f"/games/{GAME_ID}/{filename}"
+                existing_model["r1_file"] = f"../games/{GAME_ID}/{filename}"
                 print(f"已为模型 {model_id} 补全 Round 1 文件")
                 changes_made = True
 
