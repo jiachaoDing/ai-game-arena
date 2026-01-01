@@ -72,7 +72,7 @@
         "id": "kimi-k2",
         "name": "KIMI K2",
         "type": "standard",
-        "status": "Pass",
+        "status": "Error",
         "r1_file": "/games/snake/kimi-k2-r1.html",
         "r2_file": null,
         "notes": "Initial generation added via python script.",
