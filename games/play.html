@@ -312,7 +312,7 @@
         currentFPS: 0,
 
         // Scaling properties
-        baseWidth: 1280, // 增加基础宽度以容纳更大画幅的游戏
+        baseWidth: 1280, // 默认画布大小；会在 iframe load 后根据实际内容自动测量更新
         baseHeight: 800,
         scaleFactor: 1,
         gameContainerHeight: 600,
@@ -379,10 +379,67 @@
         },
 
         onIframeLoad() {
+          // 先按默认值计算一次，避免首帧闪烁/高度为 0
           this.updateScaling();
+          // 再根据 iframe 内部真实内容尺寸同步（很多游戏页面高度并非 800，会被裁剪）
+          this.syncIframeDimensions();
+
           this.currentFPS = 0; // Reset FPS on new load
           this.injectFPSMonitor();
           if (this.gameModeActive) this.injectIframeControls();
+        },
+
+        syncIframeDimensions(attempt = 0) {
+          // 仅限同源 iframe（本项目 src 为本地 html，相同域名路径时可访问）
+          try {
+            const iframe = this.$refs.gameIframe;
+            const win = iframe?.contentWindow;
+            const doc = win?.document;
+            if (!doc) return;
+
+            const el = doc.documentElement;
+            const body = doc.body;
+
+            const measuredWidth = Math.max(
+              el?.scrollWidth || 0,
+              el?.offsetWidth || 0,
+              body?.scrollWidth || 0,
+              body?.offsetWidth || 0
+            );
+            const measuredHeight = Math.max(
+              el?.scrollHeight || 0,
+              el?.offsetHeight || 0,
+              body?.scrollHeight || 0,
+              body?.offsetHeight || 0
+            );
+
+            // 有些页面会在 onload 后再布局/字体加载，前几次测量可能不准：做几次重试
+            if (measuredWidth > 0 && measuredHeight > 0) {
+              const changed =
+                Math.abs(measuredWidth - this.baseWidth) > 2 ||
+                Math.abs(measuredHeight - this.baseHeight) > 2;
+
+              // 防止极端值：尺寸太小直接忽略
+              if (measuredWidth >= 320 && measuredHeight >= 240) {
+                this.baseWidth = measuredWidth;
+                this.baseHeight = measuredHeight;
+              }
+
+              this.updateScaling();
+
+              // 如果这次有变化，再额外追测几次确保最终稳定（例如字体加载导致高度变化）
+              if (changed && attempt < 4) {
+                setTimeout(() => this.syncIframeDimensions(attempt + 1), 150);
+              }
+              return;
+            }
+
+            if (attempt < 4) {
+              setTimeout(() => this.syncIframeDimensions(attempt + 1), 150);
+            }
+          } catch (e) {
+            // 跨域或访问被拒绝时静默失败，仍使用默认 baseWidth/baseHeight
+          }
         },
 
         async loadData() {

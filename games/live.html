@@ -130,12 +130,61 @@
               currentVersion: 'r1',
               scale: 1,
               containerHeight: 400,
-              baseWidth: 1280,
+              baseWidth: 1280,  // 默认值，会在 iframe load 后按实际内容测量更新
               baseHeight: 800,
               updateScale() {
                 const w = this.$refs.cardContainer.clientWidth;
                 this.scale = w / this.baseWidth;
                 this.containerHeight = this.baseHeight * this.scale;
+              },
+              syncIframeDimensions(iframe, attempt = 0) {
+                // 仅限同源 iframe；跨域访问失败时会回退到默认 baseWidth/baseHeight
+                try {
+                  const win = iframe?.contentWindow;
+                  const doc = win?.document;
+                  if (!doc) return;
+
+                  const el = doc.documentElement;
+                  const body = doc.body;
+
+                  const measuredWidth = Math.max(
+                    el?.scrollWidth || 0,
+                    el?.offsetWidth || 0,
+                    body?.scrollWidth || 0,
+                    body?.offsetWidth || 0
+                  );
+                  const measuredHeight = Math.max(
+                    el?.scrollHeight || 0,
+                    el?.offsetHeight || 0,
+                    body?.scrollHeight || 0,
+                    body?.offsetHeight || 0
+                  );
+
+                  if (measuredWidth > 0 && measuredHeight > 0) {
+                    const changed =
+                      Math.abs(measuredWidth - this.baseWidth) > 2 ||
+                      Math.abs(measuredHeight - this.baseHeight) > 2;
+
+                    if (measuredWidth >= 320 && measuredHeight >= 240) {
+                      this.baseWidth = measuredWidth;
+                      this.baseHeight = measuredHeight;
+                    }
+
+                    this.updateScale();
+
+                    // 字体/布局可能在 onload 后继续变化，做少量追测
+                    if (changed && attempt < 4) {
+                      setTimeout(() => this.syncIframeDimensions(iframe, attempt + 1), 150);
+                    }
+                    return;
+                  }
+
+                  if (attempt < 4) {
+                    setTimeout(() => this.syncIframeDimensions(iframe, attempt + 1), 150);
+                  }
+                } catch (e) {
+                  // ignore
+                }
               }
             }"
             x-init="window.addEventListener('resize', () => updateScale()); $nextTick(() => updateScale())"
@@ -157,7 +206,7 @@
             </div>
             <!-- Game Container -->
             <div x-ref="cardContainer" class="relative bg-[#000] overflow-hidden group" :style="`height: ${containerHeight}px;`">
-              <div class="absolute top-0 left-0 origin-top-left" :style="`width: ${baseWidth}px; height: ${baseHeight}px; transform: scale(${scale});`"><iframe x-ref="gameIframe" :src="currentVersion === 'r2' ? model.r2_file : model.r1_file" class="w-full h-full border-0" scrolling="no" :class="!active ? 'pointer-events-none' : ''" @load="updateScale(); $dispatch('inject-monitor', { iframe: $refs.gameIframe, modelId: model.id })"></iframe></div>
+              <div class="absolute top-0 left-0 origin-top-left" :style="`width: ${baseWidth}px; height: ${baseHeight}px; transform: scale(${scale});`"><iframe x-ref="gameIframe" :src="currentVersion === 'r2' ? model.r2_file : model.r1_file" class="w-full h-full border-0" scrolling="no" :class="!active ? 'pointer-events-none' : ''" @load="syncIframeDimensions($refs.gameIframe); $dispatch('inject-monitor', { iframe: $refs.gameIframe, modelId: model.id })"></iframe></div>
               <div x-show="!active" @click="active = true; $dispatch('lock-scroll'); $nextTick(() => { $refs.gameIframe.focus(); $dispatch('inject-controls', { iframe: $refs.gameIframe }); })" class="absolute inset-0 z-10 bg-bg-main/40 backdrop-blur-[1px] flex items-center justify-center cursor-pointer group-hover:bg-bg-main/20 transition-all duration-300"><div class="px-4 py-2 bg-bg-card/90 border border-border rounded-xl shadow-xl text-xs font-bold text-text-primary scale-90 group-hover:scale-100 transition-transform duration-300">Click to Interact</div></div>
               <div x-show="active" class="absolute top-3 right-3 z-20 pointer-events-none flex flex-col items-end gap-1.5">
                 <div class="bg-accent/90 text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter flex items-center gap-1 shadow-lg backdrop-blur-md">

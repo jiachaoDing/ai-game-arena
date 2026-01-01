@@ -39,9 +39,8 @@
         "status": "Pass",
         "r1_file": "../games/snake/deepseek-v3.2-r1.html",
         "r2_file": null,
-        "notes": "Initial generation added via python script.",
-        "tries": 1,
-        "thinking_time": "0s"
+        "notes": "Excellent consistency in UI and smooth gameplay performance.",
+        "tries": 1
       },
       {
         "id": "glm-4.7",
@@ -50,7 +49,17 @@
         "status": "Pass",
         "r1_file": "../games/snake/glm-4.7-r1.html",
         "r2_file": null,
-        "notes": "Initial generation added via python script.",
+        "notes": "Able to complete the task.",
+        "tries": 1
+      },
+      {
+        "id": "sonnet-4.5",
+        "name": "SONNET 4.5",
+        "type": "standard",
+        "status": "Pass",
+        "r1_file": "../games/snake/sonnet-4.5-r1.html",
+        "r2_file": null,
+        "notes": "Smooth movements, simple and beautiful UI, also able to increase difficulty—very good.",
         "tries": 1
       },
       {
@@ -60,7 +69,7 @@
         "status": "Pass",
         "r1_file": "../games/snake/gpt-5.2-r1.html",
         "r2_file": null,
-        "notes": "Initial generation added via python script.",
+        "notes": "UI design is simple and the task is completed, but there are some issues with game logic, especially with right wall collision detection.",
         "tries": 1
       },
       {
@@ -70,7 +79,7 @@
         "status": "Pass",
         "r1_file": "../games/snake/grok-code-fast-v1-r1.html",
         "r2_file": null,
-        "notes": "Initial generation added via python script.",
+        "notes": "Smooth movements, task completed.",
         "tries": 1
       },
       {
@@ -80,7 +89,7 @@
         "status": "Pass",
         "r1_file": "../games/snake/kimi-k2-r1.html",
         "r2_file": null,
-        "notes": "Initial generation added via python script.",
+        "notes": "Smooth movements, basically completes the task, but UI layout and right wall collision detection have issues.",
         "tries": 1
       },
       {
@@ -90,26 +99,47 @@
         "status": "Failed",
         "r1_file": "../games/snake/qwen3-Max-r1.html",
         "r2_file": "../games/snake/qwen3-Max-r2.html",
-        "notes": "Initial generation added via python script.",
-        "tries": 2
-      },
-      {
-        "id": "sonnet-4.5",
-        "name": "SONNET 4.5",
-        "type": "standard",
-        "status": "Pass",
-        "r1_file": "../games/snake/sonnet-4.5-r1.html",
-        "r2_file": null,
-        "notes": "Initial generation added via python script.",
-        "tries": 1
+        "notes": "Still failed after three attempts at fixing.",
+        "tries": 3
       }
     ]
   },
   "tetris": {
     "title": "Tetris Benchmark",
     "emoji": "🎮",
-    "description": "Test AI models with tetris",
-    "keywords": "tetris, AI coding, game benchmark",
+    "description": "Evaluate AI model performance in creating a full-featured Tetris game. Test complex logic handling, including piece rotation, line clearing, and increasing difficulty.",
+    "keywords": "Tetris game, AI coding, LLM benchmark, game logic, piece rotation, line clearing",
+    "controls": [
+      {
+        "keys": [
+          "←",
+          "→",
+          "↓",
+          "↑"
+        ],
+        "description": "Arrow keys to move and rotate"
+      },
+      {
+        "description": "Rotate pieces to fit them into horizontal lines"
+      },
+      {
+        "description": "Clear lines to score points and prevent the stack from reaching the top"
+      }
+    ],
+    "requirements": [
+      {
+        "title": "Rotation Logic",
+        "description": "Handle piece orientation changes and wall-kick collisions."
+      },
+      {
+        "title": "Line Clearing",
+        "description": "Detect full horizontal rows, remove them, and shift the stack down."
+      },
+      {
+        "title": "Difficulty Scaling",
+        "description": "Increasing drop speed as the score or level increases."
+      }
+    ],
     "models": [
       {
         "id": "deepseek-v3.2",
@@ -117,25 +147,7 @@
         "status": "Pass",
         "r1_file": "../games/tetris/deepseek-v3.2-r1.html",
         "r2_file": null,
-        "notes": "Added via improved python script.",
-        "tries": 1
-      },
-      {
-        "id": "gemini-3-pro",
-        "name": "GEMINI 3 PRO",
-        "status": "Pass",
-        "r1_file": "../games/tetris/gemini-3-pro-r1.html",
-        "r2_file": null,
-        "notes": "Added via improved python script.",
-        "tries": 1
-      },
-      {
-        "id": "glm-4.7",
-        "name": "GLM 4.7",
-        "status": "Pass",
-        "r1_file": "../games/tetris/glm-4.7-r1.html",
-        "r2_file": null,
-        "notes": "Added via improved python script.",
+        "notes": "Accurate & beauitiful task completion and extra features like space bar for quick drop and next piece preview.",
         "tries": 1
       },
       {
@@ -144,34 +156,16 @@
         "status": "Pass",
         "r1_file": "../games/tetris/gpt-5.2-r1.html",
         "r2_file": null,
-        "notes": "Added via improved python script.",
+        "notes": "Complete the task, and add features like falling preview and space bar for quick drop.",
         "tries": 1
       },
       {
-        "id": "grok-code-fast-v1",
-        "name": "GROK CODE FAST V1",
+        "id": "gemini-3-pro",
+        "name": "GEMINI 3 PRO",
         "status": "Pass",
-        "r1_file": "../games/tetris/grok-code-fast-v1-r1.html",
+        "r1_file": "../games/tetris/gemini-3-pro-r1.html",
         "r2_file": null,
-        "notes": "Added via improved python script.",
-        "tries": 1
-      },
-      {
-        "id": "kimi-k2",
-        "name": "KIMI K2",
-        "status": "Pass",
-        "r1_file": "../games/tetris/kimi-k2-r1.html",
-        "r2_file": null,
-        "notes": "Added via improved python script.",
-        "tries": 1
-      },
-      {
-        "id": "qwen3-Max",
-        "name": "QWEN3 MAX",
-        "status": "Pass",
-        "r1_file": "../games/tetris/qwen3-Max-r1.html",
-        "r2_file": null,
-        "notes": "Added via improved python script.",
+        "notes": "Complete the task, and the page is also beautiful.",
         "tries": 1
       },
       {
@@ -180,8 +174,44 @@
         "status": "Pass",
         "r1_file": "../games/tetris/sonnet-4.5-r1.html",
         "r2_file": null,
-        "notes": "Added via improved python script.",
+        "notes": "Accurate & perfect task completion, smooth movements, beautiful UI.",
         "tries": 1
+      },
+      {
+        "id": "glm-4.7",
+        "name": "GLM 4.7",
+        "status": "Pass",
+        "r1_file": "../games/tetris/glm-4.7-r1.html",
+        "r2_file": null,
+        "notes": "Complete the task, but the prediction of the falling block failed.",
+        "tries": 1
+      },
+      {
+        "id": "kimi-k2",
+        "name": "KIMI K2",
+        "status": "Pass",
+        "r1_file": "../games/tetris/kimi-k2-r1.html",
+        "r2_file": null,
+        "notes": "Complete the task, but the animation is not smooth.",
+        "tries": 1
+      },
+      {
+        "id": "grok-code-fast-v1",
+        "name": "GROK CODE FAST V1",
+        "status": "Pass",
+        "r1_file": "../games/tetris/grok-code-fast-v1-r1.html",
+        "r2_file": null,
+        "notes": "Complete the task, but there is a blank column on the right side of the page.",
+        "tries": 1
+      },
+      {
+        "id": "qwen3-Max",
+        "name": "QWEN3 MAX",
+        "status": "Fixed",
+        "r1_file": "../games/tetris/qwen3-Max-r1.html",
+        "r2_file": "../games/tetris/qwen3-Max-r2.html",
+        "notes": "First generation failed, but successfully completed the task after three attempts at fixing.",
+        "tries": 3
       }
     ]
   }
