@@ -29,83 +29,13 @@
 
 <body>
   <div
-    x-data="{
-      currentVersion: 'r1',
-      gameData: null,
-      modelData: null,
-      gameId: '',
-      modelId: '',
-      loading: true,
-      darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches),
-
-      toggleTheme() {
-        this.darkMode = !this.darkMode;
-        localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
-      },
-
-      init() {
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        this.gameId = urlParams.get('game') || 'snake';
-        this.modelId = urlParams.get('model') || 'gpt4o';
-        this.loadData();
-      },
-
-      async loadData() {
-        try {
-          const response = await fetch('../data/games.json');
-          const games = await response.json();
-          this.gameData = games[this.gameId];
-          this.modelData = this.gameData?.models.find(m => m.id === this.modelId);
-
-          if (!this.modelData) {
-            console.error('Model not found');
-            this.loading = false;
-            return;
-          }
-
-          // If no Round 2, default to R1
-          if (!this.modelData.r2_file) {
-            this.currentVersion = 'r1';
-          }
-
-          this.loading = false;
-        } catch (error) {
-          console.error('Failed to load data:', error);
-          this.loading = false;
-        }
-      },
-
-      get currentIframeSrc() {
-        if (!this.modelData) return '';
-        return this.currentVersion === 'r2' && this.modelData.r2_file
-          ? this.modelData.r2_file
-          : this.modelData.r1_file;
-      },
-
-      getStatusBadgeClass(status) {
-        const statusMap = {
-          'Pass': 'badge-pass',
-          'Fixed': 'badge-fixed',
-          'Failed': 'badge-failed'
-        };
-        return statusMap[status] || 'badge-fixed';
-      },
-
-      getStatusIcon(status) {
-        const iconMap = {
-          'Pass': '✅',
-          'Fixed': '⚠️',
-          'Failed': '❌'
-        };
-        return iconMap[status] || '📦';
-      }
-    }"
+    x-data="playPageData()"
     x-init="
       $watch('darkMode', val => val ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark')); 
       darkMode ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
       init()
     "
+    @keydown.window.capture="handleHostArrowKey($event)"
     class="min-h-screen bg-bg-main text-text-primary transition-colors duration-300"
   >
     <!-- Theme Toggle -->
@@ -146,13 +76,48 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
               </svg>
-              <span>Back to List</span>
+              <span>Back</span>
             </a>
 
             <!-- Title -->
             <div class="text-center transition-all duration-300">
               <h1 class="text-xl font-bold tracking-tight text-text-primary transition-colors duration-300" x-text="gameData?.title"></h1>
-              <div class="text-xs text-text-muted font-medium uppercase tracking-widest mt-0.5 transition-colors duration-300" x-text="modelData?.name"></div>
+              <div class="relative mt-0.5 inline-flex flex-col items-center" @keydown.escape.window="modelMenuOpen = false">
+                <button
+                  type="button"
+                  class="flex items-center gap-2 rounded-full border border-border bg-bg-card px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-text-primary transition hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  @click="toggleModelMenu()"
+                  :aria-expanded="modelMenuOpen"
+                  :aria-label="`Choose a model for ${gameData?.title || 'this game'}`"
+                >
+                  <span x-text="modelData?.name"></span>
+                  <svg class="w-3 h-3 text-text-muted" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path d="M1 1l4 4 4-4"></path>
+                  </svg>
+                </button>
+                <div
+                  x-show="modelMenuOpen"
+                  x-cloak
+                  x-transition
+                  class="absolute top-full mt-2 w-60 rounded-2xl border border-border bg-bg-card text-xs shadow-2xl shadow-black/20"
+                  role="menu"
+                  aria-label="Available models"
+                  @click.away="modelMenuOpen = false"
+                >
+                  <template x-for="model in gameData?.models || []" :key="model.id">
+                    <button
+                      type="button"
+                      class="flex w-full items-center justify-between px-4 py-2 text-left transition hover:bg-bg-main/70"
+                      :class="model.id === modelData?.id ? 'text-accent' : 'text-text-primary'"
+                      @click="selectModel(model.id)"
+                      role="menuitem"
+                    >
+                      <span x-text="model.name"></span>
+                      <span class="text-[10px] uppercase tracking-wide text-text-muted" x-text="model.status"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
             </div>
 
             <div class="flex items-center gap-4">
@@ -172,48 +137,92 @@
 
               <!-- Status Badge -->
               <div class="badge" :class="getStatusBadgeClass(modelData?.status)">
-                <span x-text="getStatusIcon(modelData?.status)"></span>
-                <span class="ml-1" x-text="modelData?.status"></span>
+                <div :class="getStatusColorClass(modelData?.status)" class="w-2 h-2 rounded-full mr-1.5"></div>
+                <span x-text="modelData?.status"></span>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <!-- Game Container -->
+      <!-- Game Section -->
       <div class="container-custom py-8">
         <div class="max-w-4xl mx-auto">
-          <!-- Version Toggle (only show if Round 2 exists) -->
-          <div x-show="modelData?.r2_file" class="flex justify-center mb-8" role="group" aria-label="Version selector">
+          <!-- Version Toggle -->
+          <div x-show="modelData?.r2_file" class="flex justify-center mb-8" role="group">
             <div class="bg-bg-card border border-border rounded-full p-1 flex shadow-sm transition-all duration-300">
               <button
                 @click="currentVersion = 'r1'"
                 :class="currentVersion === 'r1' ? 'bg-accent text-white shadow-md' : 'text-text-secondary hover:text-text-primary'"
                 class="px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300"
-                :aria-pressed="currentVersion === 'r1'"
               >
-                Round 1 (Initial)
+                Round 1
               </button>
               <button
                 @click="currentVersion = 'r2'"
                 :class="currentVersion === 'r2' ? 'bg-accent text-white shadow-md' : 'text-text-secondary hover:text-text-primary'"
                 class="px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300"
-                :aria-pressed="currentVersion === 'r2'"
               >
-                Round 2 (Fixed)
+                Round 2
               </button>
             </div>
           </div>
 
-          <!-- Game Iframe -->
-          <div class="bg-bg-card rounded-2xl overflow-hidden border border-border dark:shadow-2xl dark:shadow-black/50 transition-all duration-300" role="main">
-            <iframe
-              :src="currentIframeSrc"
-              class="w-full h-[600px] border-0 overflow-hidden"
-              scrolling="no"
-              title="AI Generated Game Demo"
-              :aria-label="`${modelData?.name} game implementation`"
-            ></iframe>
+          <!-- Game Iframe Container -->
+          <div 
+            x-ref="gameContainer"
+            class="relative bg-[#000] rounded-2xl border border-border dark:shadow-2xl dark:shadow-black/50 transition-all duration-300 group overflow-hidden" 
+            :style="`height: ${gameContainerHeight}px;`"
+            role="main"
+            @click.away="gameModeActive = false"
+          >
+            <!-- Scaling Wrapper - 取消 translateX(-50%)，改为 left-0 居左对齐，并使用 origin-top-left -->
+            <div 
+              class="absolute top-0 left-0 origin-top-left"
+              :style="`width: ${baseWidth}px; height: ${baseHeight}px; transform: scale(${scaleFactor});`"
+            >
+              <iframe
+                x-ref="gameIframe"
+                :src="currentIframeSrc"
+                tabindex="0"
+                @load="onIframeLoad"
+                class="w-full h-full border-0"
+                scrolling="no"
+                title="AI Generated Game Demo"
+                :class="!gameModeActive ? 'pointer-events-none' : ''"
+              ></iframe>
+            </div>
+
+            <!-- Focus Overlay -->
+            <div 
+              x-show="!gameModeActive" 
+              @click="activateGame()"
+              class="absolute inset-0 z-20 bg-bg-main/60 backdrop-blur-[2px] flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
+              x-transition
+            >
+              <div class="bg-bg-card/90 border border-border px-8 py-4 rounded-2xl shadow-2xl flex flex-col items-center gap-4 group-hover:scale-105 transition-transform duration-300">
+                <div class="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
+                  </svg>
+                </div>
+                <div class="text-center">
+                  <p class="text-lg font-bold text-text-primary">Click to Play</p>
+                  <p class="text-xs text-text-muted mt-1 uppercase tracking-widest">Controls Locked in Container</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Indicator -->
+            <div x-show="gameModeActive" class="absolute top-4 right-4 z-20 pointer-events-none" x-transition>
+              <div class="bg-accent/90 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-2 shadow-lg backdrop-blur-md">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
+                Active
+              </div>
+            </div>
           </div>
 
           <!-- Game Info -->
@@ -245,33 +254,206 @@
           </div>
 
           <!-- Action Buttons -->
-          <nav class="mt-8 flex flex-wrap gap-4 justify-center" role="navigation" aria-label="Source code and navigation">
-            <a
-              :href="modelData?.r1_file"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn-secondary"
-              aria-label="View Round 1 source code"
-            >
-              View Round 1 Code
-            </a>
-            <a
-              x-show="modelData?.r2_file"
-              :href="modelData?.r2_file"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn-secondary"
-              aria-label="View Round 2 source code"
-            >
-              View Round 2 Code
-            </a>
-            <a :href="'./' + gameId + '/'" class="btn-primary" aria-label="Back to benchmark list">
-              Back to List
-            </a>
+          <nav class="mt-8 flex flex-wrap gap-4 justify-center" role="navigation">
+            <a :href="modelData?.r1_file" target="_blank" class="btn-secondary">View Round 1 Code</a>
+            <a x-show="modelData?.r2_file" :href="modelData?.r2_file" target="_blank" class="btn-secondary">View Round 2 Code</a>
+            <a :href="'./' + gameId + '/'" class="btn-primary">Back to List</a>
           </nav>
         </div>
       </div>
     </div>
+
+    <!-- Quick Navigation Arrows -->
+    <div class="pointer-events-none">
+      <template x-if="prevNav">
+        <a :href="prevNav.url" class="fixed left-4 top-1/2 -translate-y-1/2 flex items-center gap-3 rounded-full border border-border bg-bg-card/90 px-4 py-3 text-sm font-semibold text-text-primary shadow-lg transition hover:bg-bg-card pointer-events-auto">
+          <span class="text-2xl leading-none">‹</span>
+          <div class="text-left">
+            <div class="text-[10px] uppercase tracking-widest text-text-muted">Previous</div>
+            <div class="text-sm font-semibold" x-text="prevNav.label"></div>
+          </div>
+        </a>
+      </template>
+
+      <template x-if="nextNav">
+        <a :href="nextNav.url" class="fixed right-4 top-1/2 -translate-y-1/2 flex items-center gap-3 rounded-full border border-border bg-bg-card/90 px-4 py-3 text-sm font-semibold text-text-primary shadow-lg transition hover:bg-bg-card pointer-events-auto">
+          <div class="text-right">
+            <div class="text-[10px] uppercase tracking-widest text-text-muted">Next</div>
+            <div class="text-sm font-semibold" x-text="nextNav.label"></div>
+          </div>
+          <span class="text-2xl leading-none">›</span>
+        </a>
+      </template>
+    </div>
   </div>
+
+  <script>
+    window.playPageData = function () {
+      return {
+        currentVersion: 'r1',
+        gameData: null,
+        modelData: null,
+        gameId: '',
+        modelId: '',
+        loading: true,
+        darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches),
+        allGames: null,
+        prevNav: null,
+        nextNav: null,
+        modelMenuOpen: false,
+        gameModeActive: false,
+
+        // Scaling properties
+        baseWidth: 1280, // 增加基础宽度以容纳更大画幅的游戏
+        baseHeight: 800,
+        scaleFactor: 1,
+        gameContainerHeight: 600,
+        savedScrollY: 0,
+
+        toggleTheme() {
+          this.darkMode = !this.darkMode;
+          localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+        },
+
+        init() {
+          const urlParams = new URLSearchParams(window.location.search);
+          this.gameId = urlParams.get('game') || 'snake';
+          this.modelId = urlParams.get('model') || '';
+          this.loadData();
+          
+          this.$watch('currentVersion', () => this.gameModeActive = false);
+          this.$watch('modelId', () => this.gameModeActive = false);
+
+          window.addEventListener('resize', () => this.updateScaling());
+          this.$watch('gameModeActive', (val) => val ? this.lockScroll() : this.unlockScroll());
+        },
+
+        updateScaling() {
+          const container = this.$refs.gameContainer;
+          if (!container) return;
+          const containerWidth = container.clientWidth;
+          // 始终根据容器宽度缩放，确保 1280px 的内容能完全塞进容器
+          this.scaleFactor = containerWidth / this.baseWidth;
+          this.gameContainerHeight = this.baseHeight * this.scaleFactor;
+        },
+
+        lockScroll() {
+          this.anyGameActive = true;
+          this.savedScrollY = window.scrollY;
+          
+          const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+          
+          document.body.style.overflow = 'hidden';
+          document.body.style.paddingRight = `${scrollBarWidth}px`;
+          document.documentElement.classList.remove('scroll-smooth');
+        },
+
+        unlockScroll() {
+          this.anyGameActive = false;
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+          document.documentElement.classList.add('scroll-smooth');
+          
+          window.scrollTo(0, this.savedScrollY);
+        },
+
+        onIframeLoad() {
+          this.updateScaling();
+          if (this.gameModeActive) this.injectIframeControls();
+        },
+
+        async loadData() {
+          try {
+            const response = await fetch('../data/games.json');
+            const games = await response.json();
+            this.allGames = games;
+            this.gameData = games[this.gameId];
+            this.setupNavigation();
+            this.setModelById(this.modelId);
+          } catch (error) {
+            console.error('Failed to load data:', error);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        setModelById(modelId) {
+          const candidateId = modelId || this.getFirstModelId(this.gameData);
+          const selectedModel = this.gameData?.models?.find(m => m.id === candidateId);
+          if (selectedModel) {
+            this.modelId = selectedModel.id;
+            this.modelData = selectedModel;
+            this.currentVersion = 'r1';
+          }
+        },
+
+        selectModel(modelId) {
+          if (!modelId || modelId === this.modelData?.id) return;
+          this.setModelById(modelId);
+          this.modelMenuOpen = false;
+          const url = new URL(window.location.href);
+          url.searchParams.set('model', modelId);
+          history.replaceState(null, '', url);
+        },
+
+        toggleModelMenu() { this.modelMenuOpen = !this.modelMenuOpen; },
+ 
+        activateGame() {
+          this.gameModeActive = true;
+          this.$nextTick(() => {
+            if (this.$refs.gameContainer) this.$refs.gameContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            this.focusIframe();
+            this.injectIframeControls();
+            this.updateScaling();
+          });
+        },
+
+        injectIframeControls() {
+          try {
+            const iframe = this.$refs.gameIframe;
+            if (iframe?.contentWindow) {
+              iframe.contentWindow.addEventListener('keydown', (e) => {
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+                if (e.key === 'Escape') this.gameModeActive = false;
+              }, true);
+            }
+          } catch (e) {}
+        },
+
+        focusIframe() {
+          if (this.$refs.gameIframe?.contentWindow) this.$refs.gameIframe.contentWindow.focus();
+        },
+
+        handleHostArrowKey(event) {
+          if (event.key === 'Escape') { this.gameModeActive = false; return; }
+          if (this.gameModeActive && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Tab'].includes(event.key)) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        },
+
+        setupNavigation() {
+          const gameIds = Object.keys(this.allGames);
+          const currentIndex = gameIds.indexOf(this.gameId);
+          const buildNav = id => ({
+            url: `../play.html?game=${id}&model=${this.getFirstModelId(this.allGames[id])}`,
+            label: this.allGames[id]?.title || id
+          });
+          this.prevNav = currentIndex > 0 ? buildNav(gameIds[currentIndex - 1]) : null;
+          this.nextNav = currentIndex < gameIds.length - 1 ? buildNav(gameIds[currentIndex + 1]) : null;
+        },
+
+        getFirstModelId(entry) { return entry?.models?.[0]?.id || ''; },
+
+        get currentIframeSrc() {
+          if (!this.modelData) return '';
+          return this.currentVersion === 'r2' && this.modelData.r2_file ? this.modelData.r2_file : this.modelData.r1_file;
+        },
+
+        getStatusBadgeClass(status) { return { Pass: 'badge-pass', Fixed: 'badge-fixed', Failed: 'badge-failed' }[status] || 'badge-fixed'; },
+        getStatusColorClass(status) { return { Pass: 'bg-green-500', Fixed: 'bg-yellow-500', Failed: 'bg-red-500' }[status] || 'bg-gray-400'; }
+      };
+    };
+  </script>
 </body>
 </html>

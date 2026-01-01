@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth snap-y snap-mandatory">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
   <meta property="og:title" content="AI Game Benchmark - Visualizing LLM Coding Capabilities">
   <meta property="og:description" content="Compare AI models through interactive game implementations. Test one-shot generation and self-correction abilities.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://yourdomain.com/">
+  <meta property="og:url" content="https://webutilitykit.com/">
   
   <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
@@ -40,7 +40,7 @@
     "@type": "WebSite",
     "name": "AI Game Benchmark",
     "description": "Compare LLM coding capabilities through interactive game implementations",
-    "url": "https://yourdomain.com/"
+    "url": "https://webutilitykit.com/"
   }
   </script>
 </head>
@@ -76,7 +76,7 @@
   </button>
 
   <!-- Hero Section -->
-  <section class="min-h-screen flex items-center justify-center relative overflow-hidden" role="banner">
+  <section class="min-h-screen flex items-center justify-center relative overflow-hidden snap-start" role="banner">
     <div class="container-custom text-center py-20">
       <!-- Main Heading -->
       <div class="flex flex-col items-center space-y-8 mb-12 w-full">
@@ -113,7 +113,7 @@
   </section>
 
   <!-- Games Grid Section -->
-  <section id="games" class="py-20" role="main">
+  <section id="games" class="min-h-screen py-20 snap-start" role="main">
     <div class="container-custom">
       <!-- Section Header -->
       <div class="text-center mb-16">
@@ -147,15 +147,7 @@
             };
             return statusMap[status] || 'badge-fixed';
           },
-          
-          getStatusIcon(status) {
-            const iconMap = {
-              'Pass': '✅',
-              'Fixed': '⚠️',
-              'Failed': '❌'
-            };
-            return iconMap[status] || '📦';
-          }
+      
         }"
         x-init="loadGames()"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
@@ -176,7 +168,7 @@
               <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300" x-text="game.icon"></div>
               
               <!-- Game Title -->
-              <h3 class="text-2xl mb-3 group-hover:text-accent transition-colors" x-text="game.title"></h3>
+              <h3 class="text-2xl mb-3 group-hover:text-accent transition-colors duration-300" x-text="game.title"></h3>
               
               <!-- Description -->
               <p class="text-text-secondary mb-6" x-text="game.description"></p>
@@ -203,9 +195,8 @@
               
               <!-- Status Preview -->
               <div class="flex flex-wrap gap-2">
-                <template x-for="model in game.models.slice(0, 3)" :key="model.id">
+                <template x-for="model in game.models" :key="model.id">
                   <div class="badge text-xs" :class="getStatusBadgeClass(model.status)">
-                    <span x-text="getStatusIcon(model.status)"></span>
                     <span class="ml-1" x-text="model.name"></span>
                   </div>
                 </template>
@@ -229,7 +220,7 @@
   </section>
 
   <!-- Methodology Section -->
-  <section class="py-24" role="complementary">
+  <section class="py-24 snap-start" role="complementary">
     <div class="container-custom">
       <div class="max-w-4xl mx-auto">
         <h2 class="text-center mb-16 text-3xl font-bold tracking-tight">Testing Methodology</h2>
@@ -258,14 +249,14 @@
   </section>
 
   <!-- Footer -->
-  <footer class="py-12 border-t border-border" role="contentinfo">
+  <footer class="py-12 border-t border-border snap-start" role="contentinfo">
     <div class="container-custom text-center">
       <p class="text-text-muted mb-4">
         AI Game Benchmark - Evaluating LLM coding capabilities through interactive implementations
       </p>
       <p class="text-sm text-text-muted">
         Built with Tailwind CSS v4.0 & Alpine.js • 
-        <a href="https://github.com/yourusername/ai-game-arena" class="hover:text-accent transition-colors" rel="noopener noreferrer" target="_blank">
+        <a href="https://github.com/yourusername/ai-game-arena" class="hover:text-accent transition-colors duration-300" rel="noopener noreferrer" target="_blank">
           Open Source on GitHub
         </a>
       </p>

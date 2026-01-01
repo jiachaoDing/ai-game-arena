@@ -1,38 +1,103 @@
 {
   "snake": {
-    "title": "Retro Snake",
-    "prompt_file": "/prompts/snake.md",
-    "description": "The classic Nokia era game.",
-    "icon": "🐍",
+    "title": "Snake Benchmark",
+    "emoji": "🐍",
+    "description": "Compare AI model implementations of the classic Snake game. Test LLM coding capabilities through interactive gameplay.",
+    "keywords": "Snake game, AI coding, LLM benchmark, game implementation, code generation test",
+    "controls": [
+      {
+        "keys": ["↑", "↓", "←", "→"],
+        "description": "Arrow keys to move"
+      },
+      {
+        "description": "Avoid hitting walls or the snake's own body"
+      },
+      {
+        "description": "Eat food to grow longer and score points"
+      }
+    ],
+    "requirements": [
+      {
+        "title": "Stable Game Loop",
+        "description": "Frame rate control to ensure consistent speed across different devices."
+      },
+      {
+        "title": "Collision Detection",
+        "description": "Handle interactions between snake head, food, walls, and snake body."
+      }
+    ],
     "models": [
       {
-        "id": "gpt4o",
-        "name": "GPT-4o",
-        "status": "Godlike",
-        "r1_file": "/games/snake/gpt4o-r1.html",
+        "id": "deepseek-v3.2",
+        "name": "DEEPSEEK V3.2",
+        "type": "reasoning",
+        "status": "Pass",
+        "r1_file": "/games/snake/deepseek-v3.2-r1.html",
         "r2_file": null,
-        "notes": "Perfect execution on first try.",
+        "notes": "Initial generation added via python script.",
+        "tries": 1,
+        "thinking_time": "0s"
+      },
+      {
+        "id": "glm-4.7",
+        "name": "GLM 4.7",
+        "type": "standard",
+        "status": "Pass",
+        "r1_file": "/games/snake/glm-4.7-r1.html",
+        "r2_file": null,
+        "notes": "Initial generation added via python script.",
         "tries": 1
       },
       {
-        "id": "deepseek-v3",
-        "name": "DeepSeek-V3",
-        "status": "Redeemed",
-        "r1_file": "/games/snake/deepseek-v3-r1.html",
-        "r2_file": "/games/snake/deepseek-v3-r2.html",
-        "notes": "Fixed collision detection in Round 2.",
-        "tries": 3
+        "id": "gpt-5.2",
+        "name": "GPT 5.2",
+        "type": "standard",
+        "status": "Pass",
+        "r1_file": "/games/snake/gpt-5.2-r1.html",
+        "r2_file": null,
+        "notes": "Initial generation added via python script.",
+        "tries": 1
       },
       {
-        "id": "claude-3-opus",
-        "name": "Claude 3 Opus",
-        "status": "Godlike",
-        "r1_file": "/games/snake/claude-3-opus-r1.html",
+        "id": "grok-code-fast-v1",
+        "name": "GROK CODE FAST V1",
+        "type": "standard",
+        "status": "Pass",
+        "r1_file": "/games/snake/grok-code-fast-v1-r1.html",
         "r2_file": null,
-        "notes": "Flawless implementation with elegant code.",
+        "notes": "Initial generation added via python script.",
+        "tries": 1
+      },
+      {
+        "id": "kimi-k2",
+        "name": "KIMI K2",
+        "type": "standard",
+        "status": "Pass",
+        "r1_file": "/games/snake/kimi-k2-r1.html",
+        "r2_file": null,
+        "notes": "Initial generation added via python script.",
+        "tries": 1
+      },
+      {
+        "id": "qwen3-Max",
+        "name": "QWEN3 MAX",
+        "type": "standard",
+        "status": "Fixed",
+        "r1_file": "/games/snake/qwen3-Max-r1.html",
+        "r2_file": "/games/snake/qwen3-Max-r2.html",
+        "notes": "Initial generation added via python script.",
+        "tries": 2
+      },
+      {
+        "id": "sonnet-4.5",
+        "name": "SONNET 4.5",
+        "type": "standard",
+        "status": "Pass",
+        "r1_file": "/games/snake/sonnet-4.5-r1.html",
+        "r2_file": null,
+        "notes": "Initial generation added via python script.",
         "tries": 1
       }
     ]
   }
 }
-
