@@ -1,80 +1,42 @@
-import json
 import os
 
-# 配置 - 可以修改这些值以处理不同游戏
-GAME_ID = "snake"  # 修改此值以处理其他游戏
-json_path = "data/games.json"
+# 配置 - 修改 GAME_ID 即可在不同目录下生成文件
+GAME_ID = "tetris" 
 target_dir = f"games/{GAME_ID}"
 
+# 需要创建的文件列表
+MODEL_FILES = [
+    "deepseek-v3.2-r1.html",
+    "glm-4.7-r1.html",
+    "gpt-5.2-r1.html",
+    "grok-code-fast-v1-r1.html",
+    "kimi-k2-r1.html",
+    "qwen3-Max-r1.html",
+    "qwen3-Max-r2.html",
+    "sonnet-4.5-r1.html"
+]
+
 def main():
-    # 1. 读取现有的 JSON
-    if not os.path.exists(json_path):
-        print(f"错误: 找不到 {json_path}")
-        return
-
-    with open(json_path, "r", encoding="utf-8") as f:
-        try:
-            data = json.load(f)
-        except json.JSONDecodeError:
-            # 如果文件为空，初始化基础结构
-            data = {}
-
-    # 确保游戏结构存在（保留现有元数据）
-    if GAME_ID not in data:
-        data[GAME_ID] = {
-            "title": f"{GAME_ID.capitalize()} Benchmark",
-            "emoji": "🎮",
-            "description": f"Test AI models with {GAME_ID}",
-            "keywords": f"{GAME_ID}, AI coding, game benchmark",
-            "models": []
-        }
-    if "models" not in data[GAME_ID]:
-        data[GAME_ID]["models"] = []
-
-    # 2. 获取文件夹下的 HTML 文件 (排除 index.html)
+    # 1. 确保目标目录存在
     if not os.path.exists(target_dir):
-        print(f"错误: 找不到目录 {target_dir}")
-        return
+        os.makedirs(target_dir)
+        print(f"已创建目录: {target_dir}")
 
-    html_files = [f for f in os.listdir(target_dir) 
-                  if f.endswith(".html") and f != "index.html"]
-
-    # 获取当前已有的 ID
-    existing_ids = [m["id"] for m in data[GAME_ID]["models"]]
-    new_models_count = 0
-
-    for filename in html_files:
-        # 推断 ID (去掉扩展名和 -r1 后缀)
-        model_id = filename.replace(".html", "").replace("-r1", "")
+    # 2. 批量创建空文件
+    count = 0
+    for filename in MODEL_FILES:
+        file_path = os.path.join(target_dir, filename)
         
-        if model_id in existing_ids:
-            continue
+        if not os.path.exists(file_path):
+            with open(file_path, "w", encoding="utf-8") as f:
+                # 写入一个基础占位符，方便之后识别
+                f.write("<!-- Placeholder for AI Generated Game -->")
+            print(f"已新建: {filename}")
+            count += 1
+        else:
+            print(f"跳过已存在文件: {filename}")
 
-        # 格式化名字
-        model_name = model_id.replace("-", " ").upper()
-        
-        # 构造新对象 (已移除 type 和 thinking_time)
-        new_model = {
-            "id": model_id,
-            "name": model_name,
-            "status": "Pass",
-            "r1_file": f"/games/{GAME_ID}/{filename}",
-            "r2_file": None,
-            "notes": "Initial generation added via python script.",
-            "tries": 1
-        }
-
-        data[GAME_ID]["models"].append(new_model)
-        new_models_count += 1
-        print(f"已添加新模型: {model_name} ({model_id})")
-
-    # 3. 写回 JSON
-    if new_models_count > 0:
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        print(f"\n更新成功！共增加了 {new_models_count} 个模型。")
-    else:
-        print("\n没有发现新的 HTML 文件需要添加。")
+    print(f"\n任务完成！共新建了 {count} 个文件。")
 
 if __name__ == "__main__":
     main()

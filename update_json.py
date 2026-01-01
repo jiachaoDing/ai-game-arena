@@ -2,7 +2,7 @@ import json
 import os
 
 # 配置 - 可以修改这些值以处理不同游戏
-GAME_ID = "snake"  # 修改此值以处理其他游戏
+GAME_ID = "tetris"  # 修改此值以处理其他游戏
 json_path = "data/games.json"
 target_dir = f"games/{GAME_ID}"
 

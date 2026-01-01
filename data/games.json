@@ -6,7 +6,12 @@
     "keywords": "Snake game, AI coding, LLM benchmark, game implementation, code generation test",
     "controls": [
       {
-        "keys": ["↑", "↓", "←", "→"],
+        "keys": [
+          "↑",
+          "↓",
+          "←",
+          "→"
+        ],
         "description": "Arrow keys to move"
       },
       {
@@ -96,6 +101,86 @@
         "r1_file": "../games/snake/sonnet-4.5-r1.html",
         "r2_file": null,
         "notes": "Initial generation added via python script.",
+        "tries": 1
+      }
+    ]
+  },
+  "tetris": {
+    "title": "Tetris Benchmark",
+    "emoji": "🎮",
+    "description": "Test AI models with tetris",
+    "keywords": "tetris, AI coding, game benchmark",
+    "models": [
+      {
+        "id": "deepseek-v3.2",
+        "name": "DEEPSEEK V3.2",
+        "status": "Pass",
+        "r1_file": "../games/tetris/deepseek-v3.2-r1.html",
+        "r2_file": null,
+        "notes": "Added via improved python script.",
+        "tries": 1
+      },
+      {
+        "id": "gemini-3-pro",
+        "name": "GEMINI 3 PRO",
+        "status": "Pass",
+        "r1_file": "../games/tetris/gemini-3-pro-r1.html",
+        "r2_file": null,
+        "notes": "Added via improved python script.",
+        "tries": 1
+      },
+      {
+        "id": "glm-4.7",
+        "name": "GLM 4.7",
+        "status": "Pass",
+        "r1_file": "../games/tetris/glm-4.7-r1.html",
+        "r2_file": null,
+        "notes": "Added via improved python script.",
+        "tries": 1
+      },
+      {
+        "id": "gpt-5.2",
+        "name": "GPT 5.2",
+        "status": "Pass",
+        "r1_file": "../games/tetris/gpt-5.2-r1.html",
+        "r2_file": null,
+        "notes": "Added via improved python script.",
+        "tries": 1
+      },
+      {
+        "id": "grok-code-fast-v1",
+        "name": "GROK CODE FAST V1",
+        "status": "Pass",
+        "r1_file": "../games/tetris/grok-code-fast-v1-r1.html",
+        "r2_file": null,
+        "notes": "Added via improved python script.",
+        "tries": 1
+      },
+      {
+        "id": "kimi-k2",
+        "name": "KIMI K2",
+        "status": "Pass",
+        "r1_file": "../games/tetris/kimi-k2-r1.html",
+        "r2_file": null,
+        "notes": "Added via improved python script.",
+        "tries": 1
+      },
+      {
+        "id": "qwen3-Max",
+        "name": "QWEN3 MAX",
+        "status": "Pass",
+        "r1_file": "../games/tetris/qwen3-Max-r1.html",
+        "r2_file": null,
+        "notes": "Added via improved python script.",
+        "tries": 1
+      },
+      {
+        "id": "sonnet-4.5",
+        "name": "SONNET 4.5",
+        "status": "Pass",
+        "r1_file": "../games/tetris/sonnet-4.5-r1.html",
+        "r2_file": null,
+        "notes": "Added via improved python script.",
         "tries": 1
       }
     ]

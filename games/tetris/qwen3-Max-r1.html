@@ -1,0 +1,264 @@
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Game constants
+        const GRID_WIDTH = 10;
+        const GRID_HEIGHT = 20;
+        const FALL_INTERVAL = 500;
+        const COLORS = {
+            I: '#00f3ff',
+            J: '#0000ff',
+            L: '#ff9900',
+            O: '#ffff00',
+            S: '#00ff00',
+            T: '#ff00ff',
+            Z: '#ff0000'
+        };
+
+        // Game state
+        const grid = Array(GRID_HEIGHT).fill().map(() => Array(GRID_WIDTH).fill(0));
+        let currentPiece = null;
+        let score = 0;
+        let lastFall = 0;
+        let gameActive = false;
+        let gameOver = false;
+
+        // DOM elements
+        const gridContainer = document.getElementById('grid-container');
+        const scoreElement = document.getElementById('score');
+        const startButton = document.getElementById('start-button');
+        const gameOverElement = document.getElementById('game-over');
+        const restartButton = document.getElementById('restart-button');
+        const finalScoreElement = document.getElementById('final-score');
+
+        // Create grid cells
+        for (let row = 0; row < GRID_HEIGHT; row++) {
+            for (let col = 0; col < GRID_WIDTH; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        // Get grid cells as 2D array
+        const gridCells = Array.from(gridContainer.children).reduce((acc, cell, index) => {
+            const row = Math.floor(index / GRID_WIDTH);
+            const col = index % GRID_WIDTH;
+            if (!acc[row]) acc[row] = [];
+            acc[row][col] = cell;
+            return acc;
+        }, []);
+
+        // Piece shapes
+        const shapes = {
+            I: [[0, 0], [0, 1], [0, 2], [0, 3]],
+            J: [[0, 0], [0, 1], [0, 2], [1, 2]],
+            L: [[0, 0], [0, 1], [0, 2], [1, 0]],
+            O: [[0, 0], [0, 1], [1, 0], [1, 1]],
+            S: [[0, 1], [0, 2], [1, 0], [1, 1]],
+            T: [[0, 1], [1, 0], [1, 1], [1, 2]],
+            Z: [[0, 0], [0, 1], [1, 1], [1, 2]]
+        };
+
+        // Initialize game
+        function initGame() {
+            grid.forEach(row => row.fill(0));
+            score = 0;
+            updateScore();
+            currentPiece = null;
+            gameOver = false;
+            gameActive = false;
+            gameOverElement.classList.add('hidden');
+            startButton.style.display = 'block';
+        }
+
+        // Update score display
+        function updateScore() {
+            scoreElement.textContent = `Score: ${score}`;
+        }
+
+        // Spawn new piece
+        function spawnNewPiece() {
+            const pieceType = Object.keys(shapes)[Math.floor(Math.random() * Object.keys(shapes).length)];
+            currentPiece = {
+                shape: shapes[pieceType],
+                x: 4,
+                y: 0,
+                color: COLORS[pieceType]
+            };
+        }
+
+        // Check if position is valid
+        function isPositionValid(piece) {
+            for (const [dx, dy] of piece.shape) {
+                const x = piece.x + dx;
+                const y = piece.y + dy;
+                if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT || grid[y][x]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Lock piece in place
+        function lockPiece() {
+            for (const [dx, dy] of currentPiece.shape) {
+                const x = currentPiece.x + dx;
+                const y = currentPiece.y + dy;
+                grid[y][x] = currentPiece.color;
+            }
+            currentPiece = null;
+        }
+
+        // Check for completed lines
+        function checkLines() {
+            let linesCleared = 0;
+            for (let row = GRID_HEIGHT - 1; row >= 0; row--) {
+                if (grid[row].every(cell => cell !== 0)) {
+                    linesCleared++;
+                    // Remove the line
+                    grid.splice(row, 1);
+                    // Add empty row at top
+                    grid.unshift(Array(GRID_WIDTH).fill(0));
+                    // Add flash effect
+                    for (let col = 0; col < GRID_WIDTH; col++) {
+                        gridCells[row][col].classList.add('clearing');
+                    }
+                }
+            }
+
+            if (linesCleared > 0) {
+                score += linesCleared * 100;
+                updateScore();
+                // Remove flash class after animation
+                setTimeout(() => {
+                    for (let col = 0; col < GRID_WIDTH; col++) {
+                        gridCells[row][col].classList.remove('clearing');
+                    }
+                }, 300);
+            }
+        }
+
+        // Move piece left
+        function moveLeft() {
+            if (currentPiece) {
+                const newPiece = { ...currentPiece, x: currentPiece.x - 1 };
+                if (isPositionValid(newPiece)) {
+                    currentPiece = newPiece;
+                }
+            }
+        }
+
+        // Move piece right
+        function moveRight() {
+            if (currentPiece) {
+                const newPiece = { ...currentPiece, x: currentPiece.x + 1 };
+                if (isPositionValid(newPiece)) {
+                    currentPiece = newPiece;
+                }
+            }
+        }
+
+        // Move piece down
+        function moveDown() {
+            if (currentPiece) {
+                const newPiece = { ...currentPiece, y: currentPiece.y + 1 };
+                if (isPositionValid(newPiece)) {
+                    currentPiece = newPiece;
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
+        // Rotate piece
+        function rotatePiece() {
+            if (!currentPiece) return;
+
+            // Rotate 90 degrees clockwise
+            const rotatedShape = currentPiece.shape.map(([x, y]) => [y, -x]);
+            
+            // Create new piece with rotated shape
+            const rotatedPiece = { ...currentPiece, shape: rotatedShape };
+            
+            // Check if rotation is valid
+            if (isPositionValid(rotatedPiece)) {
+                currentPiece = rotatedPiece;
+            }
+        }
+
+        // Draw grid and current piece
+        function drawGrid() {
+            // Draw locked blocks
+            for (let row = 0; row < GRID_HEIGHT; row++) {
+                for (let col = 0; col < GRID_WIDTH; col++) {
+                    if (grid[row][col]) {
+                        gridCells[row][col].style.backgroundColor = grid[row][col];
+                    } else {
+                        gridCells[row][col].style.backgroundColor = '#111';
+                    }
+                }
+            }
+
+            // Draw current piece
+            if (currentPiece) {
+                for (const [dx, dy] of currentPiece.shape) {
+                    const x = currentPiece.x + dx;
+                    const y = currentPiece.y + dy;
+                    if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
+                        gridCells[y][x].style.backgroundColor = currentPiece.color;
+                    }
+                }
+            }
+        }
+
+        // Game loop
+        function gameLoop(timestamp) {
+            if (!gameActive || gameOver) return;
+
+            // Check for piece movement
+            if (timestamp - lastFall > FALL_INTERVAL) {
+                if (moveDown()) {
+                    lastFall = timestamp;
+                } else {
+                    lockPiece();
+                    checkLines();
+                    spawnNewPiece();
+                }
+            }
+
+            drawGrid();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        function startGame() {
+            initGame();
+            spawnNewPiece();
+            gameActive = true;
+            lastFall = performance.now();
+            startButton.style.display = 'none';
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event listeners
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive || gameOver) return;
+
+            switch (e.key) {
+                case 'ArrowLeft': moveLeft(); break;
+                case 'ArrowRight': moveRight(); break;
+                case 'ArrowDown': 
+                    if (moveDown()) lastFall = performance.now(); 
+                    break;
+                case 'ArrowUp': rotatePiece(); break;
+            }
+        });
+
+        // Initialize
+        initGame();
+    });
+</script>

@@ -489,10 +489,15 @@
         setupNavigation() {
           const gameIds = Object.keys(this.allGames);
           const currentIndex = gameIds.indexOf(this.gameId);
-          const buildNav = id => ({
-            url: `../play.html?game=${id}&model=${this.getFirstModelId(this.allGames[id])}`,
-            label: this.allGames[id]?.title || id
-          });
+          const buildNav = id => {
+            const targetGame = this.allGames[id];
+            // Try to maintain the same model ID if it exists in the target game
+            const targetModelId = targetGame?.models?.find(m => m.id === this.modelId)?.id || this.getFirstModelId(targetGame);
+            return {
+              url: `./play.html?game=${id}&model=${targetModelId}`,
+              label: targetGame?.title || id
+            };
+          };
           this.prevNav = currentIndex > 0 ? buildNav(gameIds[currentIndex - 1]) : null;
           this.nextNav = currentIndex < gameIds.length - 1 ? buildNav(gameIds[currentIndex + 1]) : null;
         },

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NEON TETRIS</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 320px;
+            height: 640px;
+            background: #000;
+            border: 2px solid #0ff;
+            box-shadow: 0 0 20px #0ff, inset 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            text-shadow: 0 0 5px #0ff;
+        }
+
+        #overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            font-size: 32px;
+            text-shadow: 0 0 10px #f0f;
+        }
+
+        button {
+            font-family: inherit;
+            font-size: 20px;
+            padding: 10px 20px;
+            border: 2px solid #0ff;
+            background: transparent;
+            color: #0ff;
+            cursor: pointer;
+            transition: 0.3s;
+            text-shadow: 0 0 5px #0ff;
+        }
+
+        button:hover {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 15px #0ff;
+        }
+
+        .flash {
+            animation: flash 0.3s ease-out;
+        }
+
+        @keyframes flash {
+            0% { background: #fff; }
+            100% { background: #000; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="board" width="300" height="600"></canvas>
+        <div id="ui">SCORE: <span id="score">0</span></div>
+        <div id="overlay">
+            <div id="overlay-title">NEON TETRIS</div>
+            <button id="startBtn">START</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('board');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const overlay = document.getElementById('overlay');
+        const startBtn = document.getElementById('startBtn');
+        const overlayTitle = document.getElementById('overlay-title');
+
+        const COLS = 10;
+        const ROWS = 20;
+        const BLOCK = 30;
+
+        const SHAPES = [
+            [[1,1,1,1]], // I
+            [[1,0,0],[1,1,1]], // J
+            [[0,0,1],[1,1,1]], // L
+            [[1,1],[1,1]], // O
+            [[0,1,1],[1,1,0]], // S
+            [[0,1,0],[1,1,1]], // T
+            [[1,1,0],[0,1,1]]  // Z
+        ];
+
+        const COLORS = [
+            '#0ff', '#00f', '#f90', '#ff0', '#0f0', '#f0f', '#f00'
+        ];
+
+        let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+        let score = 0;
+        let dropCounter = 0;
+        let lastTime = 0;
+        let gameOver = false;
+        let animatingRows = [];
+
+        function createPiece() {
+            const typeId = Math.floor(Math.random() * SHAPES.length);
+            return {
+                shape: SHAPES[typeId],
+                color: COLORS[typeId],
+                x: Math.floor(COLS / 2) - Math.floor(SHAPES[typeId][0].length / 2),
+                y: 0
+            };
+        }
+
+        let piece = createPiece();
+
+        function drawBlock(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+            ctx.strokeStyle = '#000';
+            ctx.strokeRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 10;
+            ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+            ctx.shadowBlur = 0;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Draw board
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (board[y][x]) {
+                        drawBlock(x, y, COLORS[board[y][x] - 1]);
+                    }
+                }
+            }
+            // Draw piece
+            piece.shape.forEach((row, y) => {
+                row.forEach((val, x) => {
+                    if (val) drawBlock(piece.x + x, piece.y + y, piece.color);
+                });
+            });
+        }
+
+        function collide() {
+            for (let y = 0; y < piece.shape.length; y++) {
+                for (let x = 0; x < piece.shape[y].length; x++) {
+                    if (piece.shape[y][x]) {
+                        const newX = piece.x + x;
+                        const newY = piece.y + y;
+                        if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
+                        if (newY >= 0 && board[newY][newX]) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function merge() {
+            piece.shape.forEach((row, y) => {
+                row.forEach((val, x) => {
+                    if (val && piece.y + y >= 0) {
+                        board[piece.y + y][piece.x + x] = COLORS.indexOf(piece.color) + 1;
+                    }
+                });
+            });
+        }
+
+        function rotate() {
+            const rotated = piece.shape[0].map((_, i) => piece.shape.map(row => row[i]).reverse());
+            const prev = piece.shape;
+            piece.shape = rotated;
+            if (collide()) piece.shape = prev;
+        }
+
+        function clearLines() {
+            let lines = 0;
+            for (let y = ROWS - 1; y >= 0; y--) {
+                if (board[y].every(val => val)) {
+                    board.splice(y, 1);
+                    board.unshift(Array(COLS).fill(0));
+                    lines++;
+                    y++;
+                    flashRow(y);
+                }
+            }
+            score += lines * 100;
+            scoreEl.textContent = score;
+        }
+
+        function flashRow(y) {
+            const div = document.createElement('div');
+            div.style.position = 'absolute';
+            div.style.top = y * BLOCK + 'px';
+            div.style.left = 0;
+            div.style.width = '100%';
+            div.style.height = BLOCK + 'px';
+            div.className = 'flash';
+            document.getElementById('game-container').appendChild(div);
+            setTimeout(() => div.remove(), 300);
+        }
+
+        function reset() {
+            board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+            score = 0;
+            scoreEl.textContent = score;
+            gameOver = false;
+            overlay.style.display = 'none';
+            piece = createPiece();
+        }
+
+        function gameLoop(time = 0) {
+            if (gameOver) return;
+            const delta = time - lastTime;
+            lastTime = time;
+            dropCounter += delta;
+
+            if (dropCounter > 500) {
+                piece.y++;
+                if (collide()) {
+                    piece.y--;
+                    merge();
+                    clearLines();
+                    piece = createPiece();
+                    if (collide()) {
+                        gameOver = true;
+                        overlayTitle.textContent = `GAME OVER\nSCORE: ${score}`;
+                        startBtn.textContent = 'PLAY AGAIN';
+                        overlay.style.display = 'flex';
+                    }
+                }
+                dropCounter = 0;
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('keydown', e => {
+            if (gameOver) return;
+            if (e.key === 'ArrowLeft') {
+                piece.x--;
+                if (collide()) piece.x++;
+            }
+            if (e.key === 'ArrowRight') {
+                piece.x++;
+                if (collide()) piece.x--;
+            }
+            if (e.key === 'ArrowDown') {
+                piece.y++;
+                if (collide()) {
+                    piece.y--;
+                    merge();
+                    clearLines();
+                    piece = createPiece();
+                    if (collide()) {
+                        gameOver = true;
+                        overlayTitle.textContent = `GAME OVER\nSCORE: ${score}`;
+                        startBtn.textContent = 'PLAY AGAIN';
+                        overlay.style.display = 'flex';
+                    }
+                }
+            }
+            if (e.key === 'ArrowUp') rotate();
+        });
+
+        startBtn.addEventListener('click', () => {
+            reset();
+            requestAnimationFrame(gameLoop);
+        });
+    </script>
+</body>
+</html>
