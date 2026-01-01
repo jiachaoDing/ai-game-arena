@@ -214,13 +214,20 @@
             </div>
 
             <!-- Active Indicator -->
-            <div x-show="gameModeActive" class="absolute top-4 right-4 z-20 pointer-events-none" x-transition>
+            <div x-show="gameModeActive" class="absolute top-4 right-4 z-20 pointer-events-none flex flex-col items-end gap-2" x-transition>
               <div class="bg-accent/90 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-2 shadow-lg backdrop-blur-md">
                 <span class="relative flex h-2 w-2">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                 </span>
                 Active
+              </div>
+              <!-- FPS Badge -->
+              <div x-show="currentFPS > 0" 
+                   :class="currentFPS < 15 ? 'bg-red-500/90' : (currentFPS < 30 ? 'bg-yellow-500/90' : 'bg-green-500/90')"
+                   class="text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg backdrop-blur-md transition-all duration-300"
+                   x-transition>
+                <span x-text="currentFPS"></span> FPS
               </div>
             </div>
           </div>
@@ -302,6 +309,7 @@
         nextNav: null,
         modelMenuOpen: false,
         gameModeActive: false,
+        currentFPS: 0,
 
         // Scaling properties
         baseWidth: 1280, // 增加基础宽度以容纳更大画幅的游戏
@@ -321,11 +329,24 @@
           this.modelId = urlParams.get('model') || '';
           this.loadData();
           
-          this.$watch('currentVersion', () => this.gameModeActive = false);
-          this.$watch('modelId', () => this.gameModeActive = false);
+          this.$watch('currentVersion', () => {
+            this.gameModeActive = false;
+            this.currentFPS = 0;
+          });
+          this.$watch('modelId', () => {
+            this.gameModeActive = false;
+            this.currentFPS = 0;
+          });
 
           window.addEventListener('resize', () => this.updateScaling());
           this.$watch('gameModeActive', (val) => val ? this.lockScroll() : this.unlockScroll());
+
+          // Listen for FPS updates from iframe
+          window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'fps') {
+              this.currentFPS = e.data.value;
+            }
+          });
         },
 
         updateScaling() {
@@ -359,6 +380,8 @@
 
         onIframeLoad() {
           this.updateScaling();
+          this.currentFPS = 0; // Reset FPS on new load
+          this.injectFPSMonitor();
           if (this.gameModeActive) this.injectIframeControls();
         },
 
@@ -418,6 +441,37 @@
               }, true);
             }
           } catch (e) {}
+        },
+
+        injectFPSMonitor() {
+          try {
+            const iframe = this.$refs.gameIframe;
+            if (iframe?.contentWindow) {
+              const script = `
+                (function() {
+                  let frameCount = 0;
+                  let lastTime = performance.now();
+                  function updateFPS() {
+                    frameCount++;
+                    const now = performance.now();
+                    if (now - lastTime >= 1000) {
+                      const fps = Math.round((frameCount * 1000) / (now - lastTime));
+                      window.parent.postMessage({ type: 'fps', value: fps }, '*');
+                      frameCount = 0;
+                      lastTime = now;
+                    }
+                    requestAnimationFrame(updateFPS);
+                  }
+                  requestAnimationFrame(updateFPS);
+                })();
+              `;
+              const scriptElement = iframe.contentWindow.document.createElement('script');
+              scriptElement.textContent = script;
+              (iframe.contentWindow.document.head || iframe.contentWindow.document.documentElement).appendChild(scriptElement);
+            }
+          } catch (e) {
+            console.warn('FPS monitor injection failed:', e);
+          }
         },
 
         focusIframe() {

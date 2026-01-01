@@ -157,9 +157,25 @@
             </div>
             <!-- Game Container -->
             <div x-ref="cardContainer" class="relative bg-[#000] overflow-hidden group" :style="`height: ${containerHeight}px;`">
-              <div class="absolute top-0 left-0 origin-top-left" :style="`width: ${baseWidth}px; height: ${baseHeight}px; transform: scale(${scale});`"><iframe :src="currentVersion === 'r2' ? model.r2_file : model.r1_file" class="w-full h-full border-0" scrolling="no" :class="!active ? 'pointer-events-none' : ''" @load="updateScale()"></iframe></div>
-              <div x-show="!active" @click="active = true; $dispatch('lock-scroll'); $nextTick(() => $el.previousElementSibling.firstElementChild.focus())" class="absolute inset-0 z-10 bg-bg-main/40 backdrop-blur-[1px] flex items-center justify-center cursor-pointer group-hover:bg-bg-main/20 transition-all duration-300"><div class="px-4 py-2 bg-bg-card/90 border border-border rounded-xl shadow-xl text-xs font-bold text-text-primary scale-90 group-hover:scale-100 transition-transform duration-300">Click to Interact</div></div>
-              <div x-show="active" class="absolute top-3 right-3 z-20 pointer-events-none"><div class="bg-accent/90 text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter flex items-center gap-1 shadow-lg"><span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span></span>Active</div></div>
+              <div class="absolute top-0 left-0 origin-top-left" :style="`width: ${baseWidth}px; height: ${baseHeight}px; transform: scale(${scale});`"><iframe x-ref="gameIframe" :src="currentVersion === 'r2' ? model.r2_file : model.r1_file" class="w-full h-full border-0" scrolling="no" :class="!active ? 'pointer-events-none' : ''" @load="updateScale(); $dispatch('inject-monitor', { iframe: $refs.gameIframe, modelId: model.id })"></iframe></div>
+              <div x-show="!active" @click="active = true; $dispatch('lock-scroll'); $nextTick(() => { $refs.gameIframe.focus(); $dispatch('inject-controls', { iframe: $refs.gameIframe }); })" class="absolute inset-0 z-10 bg-bg-main/40 backdrop-blur-[1px] flex items-center justify-center cursor-pointer group-hover:bg-bg-main/20 transition-all duration-300"><div class="px-4 py-2 bg-bg-card/90 border border-border rounded-xl shadow-xl text-xs font-bold text-text-primary scale-90 group-hover:scale-100 transition-transform duration-300">Click to Interact</div></div>
+              <div x-show="active" class="absolute top-3 right-3 z-20 pointer-events-none flex flex-col items-end gap-1.5">
+                <div class="bg-accent/90 text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter flex items-center gap-1 shadow-lg backdrop-blur-md">
+                  <span class="relative flex h-1.5 w-1.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+                  </span>
+                  Active
+                </div>
+                <!-- FPS Badge -->
+                <div x-data="{ fps: 0 }" 
+                     x-init="window.addEventListener('message', (e) => { if(e.data?.type === 'fps' && e.data?.modelId === model.id) fps = e.data.value })"
+                     x-show="fps > 0"
+                     :class="fps < 15 ? 'bg-red-500/90' : (fps < 30 ? 'bg-yellow-500/90' : 'bg-green-500/90')"
+                     class="text-white text-[8px] font-bold px-2 py-0.5 rounded-full shadow-lg backdrop-blur-md transition-all duration-300">
+                  <span x-text="fps"></span> FPS
+                </div>
+              </div>
             </div>
             <div class="px-6 py-3 bg-bg-main/10"><p class="text-[11px] text-text-secondary leading-tight line-clamp-2 italic" x-text="model.notes"></p></div>
           </div>
@@ -188,6 +204,10 @@
           await this.loadData();
           window.addEventListener('lock-scroll', () => this.lockScroll());
           window.addEventListener('unlock-scroll', () => this.unlockScroll());
+
+          // Listen for injection requests
+          window.addEventListener('inject-monitor', (e) => this.injectFPSMonitor(e.detail.iframe, e.detail.modelId));
+          window.addEventListener('inject-controls', (e) => this.injectIframeControls(e.detail.iframe));
         },
         async loadData() {
           const res = await fetch('../data/games.json');
@@ -205,9 +225,54 @@
           this.anyGameActive = false; document.body.style.overflow = ''; document.body.style.paddingRight = '';
           document.documentElement.classList.add('scroll-smooth'); window.scrollTo(0, this.savedScrollY);
         },
+        injectIframeControls(iframe) {
+          try {
+            if (iframe?.contentWindow) {
+              iframe.contentWindow.addEventListener('keydown', (e) => {
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+                if (e.key === 'Escape') this.handleHostArrowKey({ key: 'Escape', preventDefault: () => {}, stopPropagation: () => {} });
+              }, true);
+            }
+          } catch (e) {}
+        },
+        injectFPSMonitor(iframe, modelId) {
+          try {
+            if (iframe?.contentWindow) {
+              const script = `
+                (function() {
+                  let frameCount = 0;
+                  let lastTime = performance.now();
+                  function updateFPS() {
+                    frameCount++;
+                    const now = performance.now();
+                    if (now - lastTime >= 1000) {
+                      const fps = Math.round((frameCount * 1000) / (now - lastTime));
+                      window.parent.postMessage({ type: 'fps', value: fps, modelId: '${modelId}' }, '*');
+                      frameCount = 0;
+                      lastTime = now;
+                    }
+                    requestAnimationFrame(updateFPS);
+                  }
+                  requestAnimationFrame(updateFPS);
+                })();
+              `;
+              const scriptElement = iframe.contentWindow.document.createElement('script');
+              scriptElement.textContent = script;
+              (iframe.contentWindow.document.head || iframe.contentWindow.document.documentElement).appendChild(scriptElement);
+            }
+          } catch (e) {}
+        },
         handleHostArrowKey(e) {
-          if (e.key === 'Escape') { this.unlockScroll(); document.body.click(); }
-          if (this.anyGameActive && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+          if (e.key === 'Escape') { 
+            this.unlockScroll(); 
+            // Trigger a click away for all active states
+            document.body.click(); 
+            return;
+          }
+          if (this.anyGameActive && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Tab'].includes(e.key)) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
         },
         getStatusColorClass(status) {
           return {
